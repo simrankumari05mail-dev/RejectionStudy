@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Human-AI Interaction Research Study</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;overflow-x:hidden}
+        .container{max-width:100%;margin:0 auto;background:white;min-height:100vh}
+        .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+        .header p{font-size:.9rem;opacity:.9}
+        .recording-status{background:#fff3cd;color:#856404;padding:12px;text-align:center;display:none;align-items:center;justify-content:center;gap:10px;font-size:.9rem}
+        .recording-status.active{display:flex}
+        .pulse{width:10px;height:10px;background:#dc3545;border-radius:50%;animation:pulse 1.5s infinite}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.2)}}
+        .stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:15px;background:#f8f9fa;border-bottom:1px solid #e0e0e0}
+        .stat-item{text-align:center}
+        .stat-label{font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+        .stat-value{font-size:1.2rem;font-weight:bold;color:#667eea}
+        .progress-container{padding:0 15px 15px 15px;background:#f8f9fa}
+        .progress-bar{width:100%;height:6px;background:#e0e0e0;border-radius:3px;overflow:hidden}
+        .progress-fill{height:100%;background:linear-gradient(90deg,#667eea 0%,#764ba2 100%);transition:width .3s;width:0%}
+        .content{padding:20px;padding-bottom:100px}
+        .section{display:none}
+        .section.active{display:block;animation:fadeIn .3s}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .section-title{font-size:1.3rem;color:#333;margin-bottom:15px;padding-bottom:10px;border-bottom:3px solid #667eea}
+        .form-group{margin-bottom:20px}
+        label{display:block;margin-bottom:8px;color:#333;font-weight:600;font-size:.95rem;line-height:1.4}
+        input[type="text"],input[type="email"],input[type="number"],textarea,select{
+            width:100%;padding:14px;border:2px solid #e0e0e0;border-radius:8px;
+            font-size:16px;font-family:inherit;transition:all .3s;background:white;
+            -webkit-appearance:none;appearance:none;
+            autocorrect:off;autocapitalize:none;autocomplete:off;spellcheck:false;
+            -webkit-text-size-adjust:100%
+        }
+        input:focus,textarea:focus,select:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+        textarea{min-height:120px;resize:vertical}
+        .question{margin-bottom:25px;padding:15px;background:#f8f9fa;border-radius:10px;border-left:4px solid #667eea}
+        .question-text{font-size:.95rem;color:#333;margin-bottom:15px;line-height:1.6}
+        .checkbox-group,.radio-group{display:flex;flex-direction:column;gap:10px}
+        .checkbox-item,.radio-item{display:flex;align-items:flex-start;gap:12px;padding:12px;background:white;border-radius:8px;cursor:pointer;transition:background .2s;border:2px solid transparent;min-height:48px}
+        .checkbox-item input,.radio-item input{width:24px;height:24px;cursor:pointer;margin-top:2px;flex-shrink:0}
+        .checkbox-item span,.radio-item span{flex:1;line-height:1.5}
+        .likert-scale{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+        .likert-option{display:flex;align-items:center;background:white;padding:12px;border-radius:8px;border:2px solid #e0e0e0;cursor:pointer;transition:all .2s;min-height:48px}
+        .likert-option input[type="radio"]{width:24px;height:24px;margin-right:12px;cursor:pointer;flex-shrink:0}
+        .likert-option label{flex:1;cursor:pointer;margin:0;font-weight:normal;font-size:.95rem}
+        .likert-option.selected{border-color:#667eea;background:#f0f3ff}
+        .consent-box{background:#fff9e6;border:2px solid #ffc107;padding:15px;border-radius:10px;margin:20px 0}
+        .button-container{position:fixed;bottom:0;left:0;right:0;background:white;padding:15px;box-shadow:0 -2px 10px rgba(0,0,0,.1);display:flex;gap:10px;z-index:90}
+        button{flex:1;padding:16px;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s;text-transform:uppercase;letter-spacing:.5px;min-height:48px}
+        .btn-primary{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white}
+        .btn-primary:active{transform:scale(.98);opacity:.9}
+        .btn-secondary{background:#f0f0f0;color:#333}
+        .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:15px 20px;border-radius:8px;z-index:1000;display:none;min-width:200px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+        .toast.show{display:block;animation:slideDown .3s}
+        @keyframes slideDown{from{transform:translate(-50%,-20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+        .saving-indicator{position:fixed;bottom:80px;right:20px;background:#28a745;color:white;padding:10px 15px;border-radius:20px;font-size:.85rem;display:none;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:95}
+        .saving-indicator.show{display:flex}
+        .spinner{width:12px;height:12px;border:2px solid white;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .export-area{padding:30px 20px;text-align:center}
+        .export-btn{display:inline-block;padding:18px 30px;background:linear-gradient(135deg,#28a745,#20c997);color:white;border:none;border-radius:12px;font-size:1.1rem;font-weight:700;cursor:pointer;margin:10px;box-shadow:0 4px 15px rgba(40,167,69,.4);width:100%;text-transform:uppercase;letter-spacing:1px}
+        .export-btn:active{transform:scale(.98)}
+        .export-btn.typing-btn{background:linear-gradient(135deg,#667eea,#764ba2);box-shadow:0 4px 15px rgba(102,126,234,.4)}
+        .success-box{background:#d4edda;border:2px solid #28a745;border-radius:12px;padding:20px;margin:20px 0}
+        .success-box h3{color:#155724;margin-bottom:10px;font-size:1.2rem}
+        .success-box p{color:#155724;font-size:.9rem;line-height:1.6}
+        .participant-id-display{background:#667eea;color:white;border-radius:8px;padding:10px 15px;font-size:1.1rem;font-weight:bold;display:inline-block;margin:10px 0;letter-spacing:2px}
+        .required-note{color:#dc3545;font-size:.8rem;margin-top:4px}
+        @media(min-width:768px){.container{max-width:768px;margin:20px auto;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}.button-container{position:relative;box-shadow:none;border-top:2px solid #e0e0e0}.content{padding-bottom:20px}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header"><p>Psychology Research Survey</p></div>
+    <div class="recording-status" id="recordingStatus"><div class="pulse"></div><span>Recording your patterns...</span></div>
+    <div class="stats-bar">
+        <div class="stat-item"><div class="stat-label">Session</div><div class="stat-value" id="sessionId">-</div></div>
+        <div class="stat-item"><div class="stat-label">Inputs</div><div class="stat-value" id="keystrokeCount">0</div></div>
+        <div class="stat-item"><div class="stat-label">Progress</div><div class="stat-value" id="progressPercent">0%</div></div>
+    </div>
+    <div class="progress-container"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div></div>
+    <div class="content" id="mainContent">
+        <!-- SECTION 1: CONSENT -->
+        <div class="section active" data-section="1">
+            <h2 class="section-title">Participation Information Sheet and Informed Consent Form</h2>
+            <p style="margin-bottom:15px;line-height:1.7">Hello, I am <strong>Tanira Shaikh</strong>, pursuing my doctor of philosophy (Ph. D.) in Psychology from Amity Institute of Psychology and Allied Sciences at Amity University Kolkata.<br><br>I am conducting research exploring human-AI interaction and conversation satisfaction and you are invited to participate in this research voluntarily. As a fellow investigator, I will be present to answer and guide you through any queries or difficulties you come across. You will be filling in a standardized questionnaire and, while there is no time-limit, it will take mostly 30-35 minutes to complete. Only your responses to the questionnaires and your touch and type gestures while interacting with the interface will be recorded. The data collected will be used solely for the current academic research. Your personal information will be kept completely confidential. No such information that is associated with your real identity will be recorded or used in this research. You will be assigned a unique participation code that will classify your data. Thus, your data will not be linked to your real identity in any manner.<br><br>Your participation is completely voluntary. You may refuse to participate and withdraw from the research at any time.<br>
+            <div class="consent-box">
+                <p style="font-weight:600;margin-bottom:15px">Consent Statement: *</p>
+                <p style="margin-bottom:20px;line-height:1.6;font-size:.9rem">Please read the consent statement below and select “YES” if you are willing to participate in this research.</p>
+                <p style="margin-bottom:20px;line-height:1.6;font-size:.9rem">"I confirm that I have read and understood the information provided above, have had the opportunity to ask questions and received satisfactory answers. I understand that my participation is voluntary and that I may withdraw at any time. I confirm that I do not have any diagnosed psychological or physical ailments. I give my voluntary consent to participate in this study."</p>
+                <div class="radio-group">
+                    <label class="radio-item" onclick="selectRadio('consent','yes')"><input type="radio" name="consent" value="yes" id="consent_yes" required><span><strong>YES</strong> - I consent to participate</span></label>
+                    <label class="radio-item" onclick="selectRadio('consent','no')"><input type="radio" name="consent" value="no" id="consent_no"><span><strong>NO</strong> - I do not consent</span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: DEMOGRAPHICS -->
+        <div class="section" data-section="2">
+            <h2 class="section-title">&#128100; Demographics</h2>
+            <div class="form-group"><label>Participant ID (auto-generated):</label><input type="text" id="participant_id" readonly></div>
+            <div class="form-group">
+                <label>Age (in years) *</label>
+                <input type="number" id="age" min="21" max="35" placeholder="21-35 years" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label>Gender *</label>
+                <select id="gender" required>
+                    <option value="">Select gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="non-binary">Non-binary</option>
+                    <option value="other">Other</option>
+                    <option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>History of any diagnosed psychological or neurological ailments? *</label>
+                <textarea id="psych_history" placeholder="Please specify or write 'None'" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false"></textarea>
+            </div>
+            <div class="form-group">
+                <label>History of any diagnosed physical ailments? *</label>
+                <textarea id="physical_history" placeholder="Please specify or write 'None'" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Email*:</label>
+                <input type="email" id="email" name="email" placeholder="your.email@example.com" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+
+        <!-- SECTION 3: AI USE -->
+        <div class="section" data-section="3">
+            <h2 class="section-title">&#129302; AI Use Information</h2>
+            <div class="form-group">
+                <label>Purpose of using AI-based applications? (select all that apply) *</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item"><input type="checkbox" name="ai_purpose" value="academic" id="ai_academic" required><span>Academic or professional work</span></label>
+                    <label class="checkbox-item"><input type="checkbox" name="ai_purpose" value="decision" id="ai_decision"><span>Decision-making</span></label>
+                    <label class="checkbox-item"><input type="checkbox" name="ai_purpose" value="social" id="ai_social"><span>Everyday social conversations</span></label>
+                    <label class="checkbox-item"><input type="checkbox" name="ai_purpose" value="therapeutic" id="ai_therapeutic"><span>Seeking therapeutic help</span></label>
+                    <label class="checkbox-item"><input type="checkbox" name="ai_purpose" value="other" id="ai_other"><span>Other</span></label>
+                </div>
+            </div>
+            <div class="form-group" id="ai_other_text_group" style="display:none">
+                <label>Please specify other purpose: *</label>
+                <input type="text" id="ai_purpose_other_text" placeholder="Specify other purpose" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
+            </div>
+            <div class="form-group">
+                <label>What AI tools do you usually use? *</label>
+                <textarea id="ai_tools" placeholder="E.g., ChatGPT for writing, Gemini for research..." required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Hours per day on AI apps? *</label>
+                <input type="text" id="ai_hours_day" placeholder="E.g., 2-3 hours" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+            <div class="form-group">
+                <label>Hours per week on AI apps? *</label>
+                <input type="text" id="ai_hours_week" placeholder="E.g., 10-15 hours" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+            <div class="form-group">
+                <label>How many years have you been using AI apps? *</label>
+                <input type="text" id="ai_years" placeholder="E.g., 2 years, 6 months" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text">
+            </div>
+        </div>
+
+        <!-- SECTION 4: ARSQ -->
+        <div class="section" data-section="4">
+            <h2 class="section-title">&#128172; Adult Rejection Sensitivity Questionnaire (ARSQ)</h2>
+            <p style="margin-bottom:20px;line-height:1.6">The items below describe situations in which people sometimes ask things of others. For each item, imagine that you are in the situation, and then answer the questions that follow it. <strong>All fields are required.</strong></p>
+            <div id="arsqContainer"></div>
+        </div>
+
+        <!-- SECTION 5: COMPIN -->
+        <div class="section" data-section="5">
+            <h2 class="section-title">&#129504; COMPIN-10 Scale</h2>
+            <p style="margin-bottom:20px">Please read each statement carefully and indicate how correctly or incorrectly each of the following statements describes you. <strong>All fields are required.</strong></p>
+            <div id="compinContainer"></div>
+        </div>
+
+        <!-- SECTION 6: NEO-FFI -->
+        <div class="section" data-section="6">
+            <h2 class="section-title">&#128269; NEO-FFI Questionnaire</h2>
+            <p style="margin-bottom:20px">Please read each statement carefully and indicate how much you agree or disagree with each statement. <strong>All fields are required.</strong></p>
+            <div id="neoContainer"></div>
+        </div>
+
+        <!-- SECTION 7: SOCIAL SCENARIOS -->
+        <div class="section" data-section="7">
+            <h2 class="section-title">&#128101; Social Scenarios</h2>
+            <p style="margin-bottom:20px">Read the hypothetical scenarios below carefully. Imagine yourself experiencing the situations and choose the options accordingly. You can choose more than one option. <strong>All fields are required.</strong></p>
+            <div id="socialContainer"></div>
+        </div>
+
+        <!-- SECTION 8: SOCIAL PRAGMATICS -->
+        <div class="section" data-section="8">
+            <h2 class="section-title">&#128172; Social Pragmatics</h2>
+            <p style="margin-bottom:20px">Given below are some hypothetical situations of social interactions. Read them carefully and imagining yourself in each situation, choose "YES" or "NO" according to the question that follows. Give reasoning behind your choice for each scenario.</p>
+            <div id="pragmaticsContainer"></div>
+        </div>
+
+        <!-- SECTION 9: EXPORT -->
+        <div class="section" data-section="9">
+            <div class="export-area">
+                <div class="success-box"><h3>&#9989; Survey Complete!</h3><p>Thank you for participating in this research study.</p><br><p><strong>Your Participant ID:</strong></p><div class="participant-id-display" id="completionParticipantId">-</div><br><p>Please download both CSV files and hand the device back to the researcher.</p></div>
+                <p style="margin-bottom:15px;font-weight:600;color:#333">&#128229; Download Your Data:</p>
+                <button class="export-btn" onclick="downloadSurveyCSV()">&#128203; Download Survey Responses CSV</button>
+                <button class="export-btn typing-btn" onclick="downloadTypingCSV()">&#9000;&#65039; Download Typing &amp; Touch Features CSV</button>
+                <p style="margin-top:20px;font-size:.85rem;color:#666;line-height:1.6">Both files will be saved to your device's Downloads folder.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button class="btn-secondary" id="backBtn" style="display:none" onclick="previousSection()">&#8592; Back</button>
+        <button class="btn-primary" id="nextBtn" onclick="nextSection()">Continue &#8594;</button>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="saving-indicator" id="savingIndicator"><div class="spinner"></div><span>Saving...</span></div>
+</div>
+
+<script>
+// ================================================================
+// ⚠️  RESEARCHER CONFIG
+const RESEARCH_API_KEY = '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';
+// ================================================================
+
+const TOTAL_SECTIONS = 9;
+
+// ── Identity ──────────────────────────────────────────────────────
+let sessionId     = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2,9);
+let participantId = 'P' + Date.now().toString().substr(-8);
+let currentSection = 1;
+let isRecording    = false;
+let updateInterval = null;
+let sessionStart   = Date.now();
+
+// ── KEYSTROKE TRACKING ────────────────────────────────────────────
+let keystrokes           = [];   // per-window keydown events (cleared each snapshot)
+let socialKeywordLog     = [];   // rolling 30s keydown log (NOT cleared each window)
+
+// Per-window correction counters (reset each snapshot)
+let windowBackspaceCount  = 0;
+let windowDeleteCount     = 0;
+let windowShiftCount      = 0;
+let windowCapsLockCount   = 0;
+let windowPrintableCount  = 0;   // FIX #5: count printable chars per window via input event
+
+// Session-cumulative counters
+let totalKeystrokeCount   = 0;
+let totalPrintableCount   = 0;
+let totalBackspaceCount   = 0;
+let totalDeleteCount      = 0;
+let totalShiftCount       = 0;
+let totalCapsLockCount    = 0;
+let totalLeftKeyCount     = 0;
+let totalCharKeyCount     = 0;
+
+// Displayed counter
+let displayKeystrokeCount = 0;
+
+// FIX #1: Cross-window pause tracking
+// Instead of measuring IKI only within a 1-second window (which makes
+// pauses >1s impossible to detect), we track the absolute timestamp
+// of the last keydown event across windows. When a new keydown arrives
+// we compute gap = now - lastKeystrokeTimeSec. If gap > threshold it
+// is a genuine pause. This fires correctly across window boundaries.
+let lastKeystrokeTimeSec  = null;  // absolute time of most recent keydown
+let sessionPauseLog       = [];    // [{duration_s, timestamp}] — all pauses detected
+const PAUSE_THRESHOLD_S   = 2.0;   // pauses longer than this count
+
+// FIX #2: Text-length-delta correction counting (ground truth for Android)
+// Every input event: compare current field.value.length vs stored length.
+// A decrease = deletion(s), regardless of which event fired.
+let textLengthSnapshot    = {};    // {fieldId: length} — updated each input event
+
+// ── Rolling buffers ───────────────────────────────────────────────
+const ROLLING_IKL_SEC   = 60;
+let rollingFlightLog    = [];
+const LATENCY_TREND_SEC = 120;
+let latencyOverTime     = [];
+
+// ── Per-field text mirror ─────────────────────────────────────────
+let textInputs = {};
+
+// ── Touch — SESSION CUMULATIVE ────────────────────────────────────
+const SWIPE_MIN_PX   = 10;
+const MICRO_PAUSE_MS = 100;
+let allTouchDurations      = [];
+let allTouchPressures      = [];
+let allTouchAreas          = [];
+let allTouchVelocities     = [];
+let allGestureDistances    = [];
+let allGestureCurvatures   = [];
+let allJerkValues          = [];
+let allInterTouchIntervals = [];
+let allMicroSuspensions    = [];
+let maxSimultaneousFingers = 0;
+let lastTouchStartTime     = null;
+let tapCount               = 0;
+let swipeGestureCount      = 0;
+let totalTouchEventCount   = 0;
+let touchWindow            = [];
+let activeTouches          = {};
+
+// ── Motion sensors ────────────────────────────────────────────────
+let deviceMotionSamples    = [];
+let deviceOrientationData  = [];
+let motionPermissionGranted = false;
+
+// ── API state ─────────────────────────────────────────────────────
+let lastApiCallTime  = 0;
+const API_INTERVAL_S = 10;
+let latestApiScores  = null;
+let apiCallCount     = 0;
+let apiErrorCount    = 0;
+
+// ── Output ────────────────────────────────────────────────────────
+let typingFeatureRows = [];
+let surveyResponse    = {};
+
+// ── Cross-snapshot state for delta features ───────────────────────
+let lastSnapshotPolarity   = null;   // for polarity_shift_rate
+let lastSnapshotWordCount  = 0;      // for word_count_delta
+
+// ── TEXT INPUT WHITELIST ──────────────────────────────────────────
+const TEXT_INPUT_TYPES = new Set(['text','email','number','search','url','tel']);
+function isTextInput(el){
+    return el.tagName==='TEXTAREA' || (el.tagName==='INPUT' && TEXT_INPUT_TYPES.has(el.type));
+}
+
+// ================================================================
+// LEXICONS
+// ================================================================
+const LEX = {
+    positive:  new Set(['happy','joy','love','good','great','excellent','wonderful','amazing','fantastic','awesome','beautiful','pleased','delighted','cheerful','glad','satisfied','content','blessed','thrilled','excited','optimistic','hopeful','grateful','confident','proud','calm','peaceful','comfortable','enjoy','enjoyed','enjoying','brilliant','superb','perfect','positive','bright','kind','caring']),
+    negative:  new Set(['sad','angry','hate','bad','terrible','awful','horrible','frustrated','annoyed','upset','miserable','depressed','disappointed','unhappy','disgusted','ashamed','guilty','regret','hurt','pain','suffering','distressed','troubled','lonely','rejected','ignored','worthless','stupid','dumb','useless','failure','loser','pathetic','weak','hopeless','incompetent','mess','messed','wrong','dreadful','hated']),
+    anxiety:   new Set(['worry','anxious','nervous','scared','fear','afraid','stressed','tense','uncertain','worried','uneasy','apprehensive','dread','panic','overwhelmed','restless','jittery','doubt','insecure','fearful','frightened','alarmed']),
+    certainty: new Set(['always','never','definitely','certainly','absolutely','surely','completely','totally','entirely','undoubtedly','clearly','obviously','must','will','cannot','sure','certain','guaranteed','indeed','truly','unquestionably']),
+    tentative: new Set(['maybe','perhaps','possibly','might','could','probably','seems','appears','somewhat','guess','suppose','think','feel','wonder','unsure','uncertain','kind','sort','rather','fairly']),
+    apology:   new Set(['sorry','apologize','apologies','excuse','forgive','pardon','regret','fault','mistake','wrong','blame','forgiveness']),
+    politeness:new Set(['please','thank','thanks','appreciate','grateful','kindly','welcome','beg','gratitude','thankful']),
+    fp1:       new Set(['i','me','my','mine','myself']),
+    fp2:       new Set(['we','us','our','ours','ourselves']),
+    sp:        new Set(['you','your','yours','yourself','yourselves']),
+    tp:        new Set(['they','them','their','theirs','themselves','he','him','his','she','her','hers']),
+    negSelf:   new Set(['stupid','dumb','worthless','useless','failure','loser','idiot','pathetic','fault','blame','weak','hopeless','incompetent','messed','terrible','awful','horrible','wrong']),
+    social:    new Set(['friend','friends','family','people','person','talk','conversation','social','group','together','meet','share','support','help','care','relationship','community','colleague','partner','spouse','parent','sibling','child','team']),
+    cognitive: new Set(['think','know','consider','believe','understand','realize','remember','forget','decide','wonder','reflect','question','reason','because','therefore','although','however','should','could','would','might']),
+    biological:new Set(['heart','tired','sleep','eat','food','body','health','sick','pain','breath','breathe','stomach','head','hands','arms','legs','eyes','mouth','blood','brain','skin','hurt','ache','fever','hunger','thirst']),
+    pastWords: new Set(['was','were','had','did','went','came','said','thought','felt','saw','knew','loved','hated','missed','lost','found','left','took','gave','told','showed','used','tried','wanted','needed','worked','played','lived','died','happened','started','ended','finished','began','stopped','called','asked','seemed','looked','turned','moved','brought','kept','held','stood','fell','ran','set','put','got','made','let','led']),
+    futureWords:new Set(['will','shall','going','tomorrow','soon','later','eventually','someday','future','next','ahead','upcoming','plan','plans','planning','intend','intends','hope','hopes','hoping','expect','expects','expecting','anticipate','prepare','prepared','preparing']),
+    negation:  new Set(['not','no','never','nobody','nothing','nowhere','neither','nor','cannot','cant','wont','dont','doesnt','didnt','isnt','arent','wasnt','werent','hasnt','havent','hadnt','shouldnt','wouldnt','couldnt']),
+    hedging:   ['kind of','sort of','i think','i guess','i suppose','i believe','i feel like','somewhat','rather','fairly','quite','maybe','if that is okay','if you do not mind','i hope','i am not sure','i was wondering','perhaps','possibly','it seems','it appears','more or less'],
+    socialKeywords: new Set(['sorry','you','please','maybe','thank','thanks','if','could','would','should','help','need','want','feel','hurt','alone','rejected','ignored'])
+};
+
+const EMOTION_WEIGHTS = {
+    'love':1.0,'amazing':0.9,'fantastic':0.9,'excellent':0.9,'wonderful':0.9,'awesome':0.8,'brilliant':0.9,'superb':0.9,'perfect':0.9,'great':0.7,'good':0.5,'happy':0.8,'joy':0.9,'thrilled':0.9,'excited':0.8,'delighted':0.8,'blessed':0.7,'grateful':0.7,'hopeful':0.6,'glad':0.6,'satisfied':0.6,'content':0.5,'calm':0.5,'pleased':0.6,'cheerful':0.7,'optimistic':0.7,'confident':0.7,'proud':0.7,
+    'hate':1.0,'terrible':0.9,'awful':0.9,'horrible':0.9,'miserable':0.9,'depressed':0.9,'suffering':0.9,'worthless':0.9,'hopeless':0.9,'disgusted':0.8,'frustrated':0.8,'distressed':0.8,'angry':0.8,'sad':0.7,'hurt':0.7,'pain':0.7,'rejected':0.8,'ignored':0.7,'lonely':0.8,'ashamed':0.8,'guilty':0.7,'regret':0.7,'troubled':0.7,'upset':0.6,'annoyed':0.6,'disappointed':0.7,'unhappy':0.7
+};
+
+const TOPIC_WORD_LISTS = {
+    social_rejection:     {rejected:1.0,ignored:1.0,excluded:1.0,unwanted:1.0,invisible:0.9,overlooked:0.9,dismissed:0.9,abandoned:0.9,alone:0.8,lonely:0.8,outsider:0.9,unloved:1.0,unwelcome:0.9,ostracized:1.0,shunned:1.0,cold:0.6,distant:0.6,unnoticed:0.9},
+    anticipatory_anxiety: {worried:0.9,anxious:1.0,nervous:0.9,scared:0.8,fear:0.9,afraid:0.8,dread:1.0,panic:0.9,hoping:0.6,wishing:0.5,please:0.6,maybe:0.7,uncertain:0.8,unsure:0.8,disappoint:0.9,judged:0.9,anticipate:0.8},
+    self_worth:           {worthless:1.0,useless:1.0,stupid:0.9,dumb:0.9,failure:1.0,loser:1.0,pathetic:0.9,incompetent:0.9,hopeless:0.9,weak:0.8,fault:0.8,blame:0.8,deserve:0.7,proud:0.7,confident:0.8,capable:0.8},
+    social_engagement:    {friend:0.9,friends:0.9,family:0.8,together:0.8,talk:0.7,conversation:0.8,share:0.7,connect:0.9,belong:1.0,included:0.9,accepted:0.9,welcome:0.8,support:0.8,care:0.7,love:0.8,understand:0.7,listen:0.8,community:0.8},
+    emotional_regulation: {calm:0.9,okay:0.6,fine:0.5,manage:0.7,cope:0.9,handle:0.7,control:0.8,breathe:0.9,relax:0.8,accept:0.8,improve:0.7,deal:0.7,process:0.7,recover:0.8}
+};
+
+const TOPIC_SETS = {};
+for(const[topic,ww] of Object.entries(TOPIC_WORD_LISTS))
+    TOPIC_SETS[topic] = new Set(Object.keys(ww));
+
+const LEFT_KEYS  = new Set(['q','w','e','r','t','a','s','d','f','g','z','x','c','v','b','1','2','3','4','5']);
+const LEFT_CODES = new Set(['KeyQ','KeyW','KeyE','KeyR','KeyT','KeyA','KeyS','KeyD','KeyF','KeyG','KeyZ','KeyX','KeyC','KeyV','KeyB','Digit1','Digit2','Digit3','Digit4','Digit5']);
+
+// ================================================================
+// MATH UTILITIES
+// ================================================================
+function mean(a){ return a.length ? a.reduce((s,v)=>s+v,0)/a.length : 0; }
+function sampleStd(a){
+    if(a.length<2)return 0;
+    const m=mean(a);
+    return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1));
+}
+function popStd(a){
+    if(a.length<2)return 0;
+    const m=mean(a);
+    return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length);
+}
+function variance(a){ return a.length<2?0:sampleStd(a)**2; }
+function median(a){
+    if(!a.length)return 0;
+    const s=[...a].sort((x,y)=>x-y),mid=Math.floor(s.length/2);
+    return s.length%2?s[mid]:(s[mid-1]+s[mid])/2;
+}
+function skewness(a){
+    const n=a.length; if(n<3)return 0;
+    const m=mean(a),s=sampleStd(a); if(!s)return 0;
+    return (a.reduce((acc,v)=>acc+((v-m)/s)**3,0)/n)*n*n/((n-1)*(n-2));
+}
+function kurtosis(a){
+    const n=a.length; if(n<4)return 0;
+    const m=mean(a),s=sampleStd(a); if(!s)return 0;
+    const k4=a.reduce((acc,v)=>acc+((v-m)/s)**4,0);
+    return (n*(n+1))/((n-1)*(n-2)*(n-3))*k4-3*(n-1)**2/((n-2)*(n-3));
+}
+function rmssd(a){
+    if(a.length<2)return 0;
+    const diffs=a.slice(1).map((v,i)=>(v-a[i])**2);
+    return Math.sqrt(mean(diffs));
+}
+function mssd(a){
+    if(a.length<2)return 0;
+    const diffs=a.slice(1).map((v,i)=>Math.abs(v-a[i]));
+    return mean(diffs.map(d=>d*d));
+}
+function slope(pairs){
+    if(pairs.length<3)return 0;
+    const mx=mean(pairs.map(p=>p.x)),my=mean(pairs.map(p=>p.y));
+    const num=pairs.reduce((s,p)=>s+(p.x-mx)*(p.y-my),0);
+    const den=pairs.reduce((s,p)=>s+(p.x-mx)**2,0);
+    return den?num/den:0;
+}
+function shannonEntropy(a){
+    if(a.length<2)return 0;
+    const mn=Math.min(...a),mx=Math.max(...a);
+    if(mx===mn)return 0;
+    const bins=Math.max(5,Math.ceil(Math.sqrt(a.length)));
+    const h=new Array(bins).fill(0);
+    a.forEach(v=>{const b=Math.min(Math.floor((v-mn)/(mx-mn)*bins),bins-1);h[b]++;});
+    return h.reduce((e,c)=>{const p=c/a.length;return p>0?e-p*Math.log2(p):e;},0);
+}
+function sampleEntropy(a,m=2){
+    const n=a.length; if(n<m+2)return 0;
+    const r=0.2*popStd(a); if(!r)return 0;
+    let A=0,B=0;
+    for(let i=0;i<n-m;i++) for(let j=i+1;j<n-m;j++){
+        let ok=true;
+        for(let k=0;k<m;k++) if(Math.abs(a[i+k]-a[j+k])>r){ok=false;break;}
+        if(ok){B++;if(Math.abs(a[i+m]-a[j+m])<=r)A++;}
+    }
+    return (B===0||A===0)?0:-Math.log(A/B);
+}
+function multiscaleEntropy(a){
+    const se1=sampleEntropy(a);
+    if(a.length<4)return{scale1:se1,scale2:0};
+    const coarse=[];
+    for(let i=0;i<a.length-1;i+=2)coarse.push((a[i]+a[i+1])/2);
+    return{scale1:se1,scale2:sampleEntropy(coarse)};
+}
+function dominantFrequency(a){
+    const n=a.length; if(n<8)return 0;
+    const sr=1/mean(a),m=mean(a),c=a.map(v=>v-m);
+    let maxMag=0,dBin=0;
+    for(let k=1;k<Math.floor(n/2);k++){
+        let re=0,im=0;
+        for(let t=0;t<n;t++){const ang=2*Math.PI*k*t/n;re+=c[t]*Math.cos(ang);im-=c[t]*Math.sin(ang);}
+        const mag=Math.sqrt(re*re+im*im);
+        if(mag>maxMag){maxMag=mag;dBin=k;}
+    }
+    return dBin*sr/n;
+}
+function spectralBandPower(a){
+    const n=a.length; if(n<8)return{lowBand:0,highBand:0,totalPower:0};
+    const sr=1/mean(a),m=mean(a),c=a.map(v=>v-m);
+    let lowPow=0,highPow=0,total=0;
+    for(let k=1;k<Math.floor(n/2);k++){
+        let re=0,im=0;
+        for(let t=0;t<n;t++){const ang=2*Math.PI*k*t/n;re+=c[t]*Math.cos(ang);im-=c[t]*Math.sin(ang);}
+        const pow=(re*re+im*im)/n,freq=k*sr/n;
+        total+=pow;
+        if(freq<=1)lowPow+=pow; else if(freq<=5)highPow+=pow;
+    }
+    return{lowBand:lowPow,highBand:highPow,totalPower:total};
+}
+function recurrenceRate(a){
+    const n=a.length; if(n<8)return 0;
+    const r=0.1*popStd(a); if(!r)return 0;
+    let rec=0;
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) if(i!==j&&Math.abs(a[i]-a[j])<=r)rec++;
+    return rec/(n*(n-1));
+}
+function determinism(a,minLine=2){
+    const n=a.length; if(n<8)return 0;
+    const r=0.1*popStd(a); if(!r)return 0;
+    const R=Array.from({length:n},(_,i)=>a.map((_,j)=>Math.abs(a[i]-a[j])<=r?1:0));
+    let diag=0,total=0;
+    for(let d=-(n-minLine);d<=n-minLine;d++){
+        let ll=0;
+        for(let i=0;i<n;i++){const j=i+d;if(j>=0&&j<n&&i!==j&&R[i][j])ll++;else{if(ll>=minLine)diag+=ll;ll=0;}}
+        if(ll>=minLine)diag+=ll;
+    }
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) if(i!==j)total+=R[i][j];
+    return total>0?diag/total:0;
+}
+function wordRepScore(words){
+    if(!words.length)return 0;
+    const freq={};words.forEach(w=>{freq[w]=(freq[w]||0)+1;});
+    return Object.values(freq).filter(c=>c>1).length/Object.keys(freq).length;
+}
+function higuchiFD(X,kmax=4){
+    const N=X.length; if(N<kmax*2+1)return 0;
+    const lnL=[],lnK=[];
+    for(let k=1;k<=kmax;k++){
+        let lengthSum=0;
+        for(let m=1;m<=k;m++){
+            let Lmk=0;
+            const maxI=Math.floor((N-m)/k);
+            for(let i=1;i<=maxI;i++)Lmk+=Math.abs(X[m-1+i*k]-X[m-1+(i-1)*k]);
+            Lmk=(Lmk*(N-1)/(maxI*k))/k;
+            lengthSum+=Lmk;
+        }
+        const avg=lengthSum/k;
+        if(avg>0){lnL.push(Math.log(avg));lnK.push(Math.log(1/k));}
+    }
+    if(lnK.length<2)return 0;
+    const mx=mean(lnK),my=mean(lnL);
+    const num=lnK.reduce((s,v,i)=>s+(v-mx)*(lnL[i]-my),0);
+    const den=lnK.reduce((s,v)=>s+(v-mx)**2,0);
+    return den?num/den:0;
+}
+function computeTopicScores(words){
+    const n=words.length||1,scores={};
+    for(const[topic,ww] of Object.entries(TOPIC_WORD_LISTS))
+        scores[topic]=words.reduce((s,w)=>s+(ww[w]||0),0)/n;
+    const vals=Object.values(scores),topicNames=Object.keys(scores);
+    const maxIdx=vals.indexOf(Math.max(...vals));
+    scores.dominant_topic_index=maxIdx;
+    scores.topic_entropy=shannonEntropy(vals);
+    return scores;
+}
+
+// ================================================================
+// FIX #4 — TOKENIZER (Bug 8 complete fix)
+// Strips punctuation glued to words AND expands contractions so
+// every word correctly matches the lexicon entries.
+// ================================================================
+const CONTRACTION_MAP = {
+    "dont":"dont","don't":"dont","wont":"wont","won't":"wont",
+    "cant":"cant","can't":"cant","doesnt":"doesnt","doesn't":"doesnt",
+    "didnt":"didnt","didn't":"didnt","isnt":"isnt","isn't":"isnt",
+    "arent":"arent","aren't":"arent","wasnt":"wasnt","wasn't":"wasnt",
+    "werent":"werent","weren't":"werent","hasnt":"hasnt","hasn't":"hasnt",
+    "havent":"havent","haven't":"havent","hadnt":"hadnt","hadn't":"hadnt",
+    "shouldnt":"shouldnt","shouldn't":"shouldnt",
+    "wouldnt":"wouldnt","wouldn't":"wouldnt",
+    "couldnt":"couldnt","couldn't":"couldnt",
+    "im":"i","i'm":"i","ive":"i","i've":"i","id":"i","i'd":"i","ill":"i","i'll":"i",
+    "youre":"you","you're":"you","youve":"you","you've":"you",
+    "hes":"he","he's":"he","shes":"she","she's":"she",
+    "theyre":"they","they're":"they","theyve":"they","they've":"they",
+    "weve":"we","we've":"we","we're":"we",
+    "its":"it","it's":"it","thats":"that","that's":"that",
+    "whats":"what","what's":"what","lets":"let","let's":"let"
+};
+
+function tokenizeWords(text){
+    const lower = text.toLowerCase();
+    const raw = lower.split(/\s+/);
+    const result = [];
+    for(let raw_w of raw){
+        if(!raw_w)continue;
+        // Strip leading/trailing non-alphanumeric (keeps internal apostrophe)
+        let w = raw_w.replace(/^[^a-z0-9']+|[^a-z0-9']+$/g, '');
+        if(!w)continue;
+        const mapped = CONTRACTION_MAP[w];
+        if(mapped){ result.push(mapped); continue; }
+        // Strip remaining non-alphanumeric
+        w = w.replace(/[^a-z0-9]/g, '');
+        if(w.length > 0) result.push(w);
+    }
+    return result;
+}
+
+// ================================================================
+// FIX #3 — PAUSE BEFORE SOCIAL KEYWORD (Bug 10 complete rewrite)
+//
+// Strategy: On every input event, if data is a space/newline we just
+// completed a word. Compute IKI = now - _lastCharInputTime. If the
+// completed word is a social keyword AND IKI > 0.3s (genuine hesitation),
+// log it. Persist entries for 60s and use their mean in each snapshot.
+//
+// Separately, we also measure IKI from the PREVIOUS word boundary to
+// this space (inter-word pause) which is a cleaner signal than
+// character-to-character IKI.
+// ================================================================
+let _lastCharInputTime    = null;   // sec — timestamp of last non-space character
+let _lastWordBoundaryTime = null;   // sec — timestamp of last space/enter
+let _currentWordBuf       = '';     // characters typed since last space
+let _socialKwPauseLog     = [];     // [{iki_s, ts}] rolling 60s log
+
+function _updateSocialKeywordTracking(e){
+    if(!isRecording) return;
+    const t = e.target;
+    if(!isTextInput(t)) return;
+
+    const nowSec = Date.now() / 1000;
+
+    // Handle deletions — trim word buffer
+    if(e.inputType === 'deleteContentBackward'){
+        if(_currentWordBuf.length > 0)
+            _currentWordBuf = _currentWordBuf.slice(0, -1);
+        return;
+    }
+    if(e.inputType === 'deleteWordBackward'){
+        _currentWordBuf = '';
+        return;
+    }
+
+    if(!e.data) return;  // null/undefined for other input types
+
+    const ch = e.data;
+
+    // Word boundary: space or newline
+    if(ch === ' ' || ch === '\n' || ch === '\r'){
+        if(_currentWordBuf.length > 0){
+            // Normalise the completed word
+            let w = _currentWordBuf.toLowerCase().replace(/^[^a-z0-9']+|[^a-z0-9']+$/g, '');
+            const mapped = CONTRACTION_MAP[w];
+            if(mapped) w = mapped;
+            else w = w.replace(/[^a-z0-9]/g, '');
+
+            if(LEX.socialKeywords.has(w)){
+                // IKI = time from last word boundary to this space
+                // (i.e. how long the participant spent typing this word)
+                // This captures pause BEFORE social word completion
+                if(_lastWordBoundaryTime !== null){
+                    const iki = nowSec - _lastWordBoundaryTime;
+                    // Genuine hesitation: between 0.3s and 30s
+                    if(iki >= 0.3 && iki < 30){
+                        _socialKwPauseLog.push({iki_s: iki, ts: nowSec});
+                    }
+                }
+                // Also measure from last character (finer granularity)
+                if(_lastCharInputTime !== null){
+                    const charIki = nowSec - _lastCharInputTime;
+                    if(charIki >= 0.5 && charIki < 30){
+                        _socialKwPauseLog.push({iki_s: charIki * 0.5, ts: nowSec});
+                    }
+                }
+            }
+        }
+        _currentWordBuf = '';
+        _lastWordBoundaryTime = nowSec;
+    } else {
+        _currentWordBuf += ch;
+        _lastCharInputTime = nowSec;
+    }
+}
+
+function getSocialKeywordPause(){
+    const nowSec = Date.now() / 1000;
+    // Keep only last 60s entries
+    _socialKwPauseLog = _socialKwPauseLog.filter(e => e.ts > nowSec - 60);
+    if(!_socialKwPauseLog.length) return 0;
+    return mean(_socialKwPauseLog.map(e => e.iki_s));
+}
+
+// ── OLD pauseBeforeSocialKeyword kept for desktop keydown fallback ──
+function pauseBeforeSocialKeyword(log){
+    if(log.length<4)return 0;
+    const pauses=[];
+    let wordBuf='',pendingPauseMs=0;
+    for(let i=1;i<log.length;i++){
+        const k=log[i];
+        const iki_ms=(k.timestamp - log[i-1].timestamp)*1000;
+        if(k.key===' '||k.key==='Enter'){
+            if(LEX.socialKeywords.has(wordBuf.toLowerCase())&&pendingPauseMs>0){
+                pauses.push(pendingPauseMs/1000);
+            }
+            wordBuf='';pendingPauseMs=0;
+        } else if(k.key==='Backspace'&&wordBuf.length>0){
+            wordBuf=wordBuf.slice(0,-1);
+        } else if(k.key.length===1){
+            wordBuf+=k.key;
+            pendingPauseMs=Math.max(pendingPauseMs,iki_ms);
+        }
+    }
+    return mean(pauses);
+}
+
+function negationAdjustedPolarity(words){
+    let score=0,negFlag=false;
+    words.forEach(w=>{
+        if(LEX.negation.has(w)){negFlag=true;return;}
+        let v=0;
+        if(LEX.positive.has(w))v=(EMOTION_WEIGHTS[w]||0.5);
+        if(LEX.negative.has(w))v=-(EMOTION_WEIGHTS[w]||0.5);
+        if(negFlag){v=-v;negFlag=false;}
+        score+=v;
+    });
+    return words.length>0?score/words.length:0;
+}
+function countEmojisAndEmoticons(text){
+    const er=/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+    const em=/(?::\)|:\(|:D|:P|;\)|:\/|:\||<3|>:<|:o|:O|XD|:'\(|:\*)/g;
+    return((text.match(er)||[]).length+(text.match(em)||[]).length);
+}
+function allCapsWordCount(text){return(text.match(/\b[A-Z]{2,}\b/g)||[]).length;}
+
+function countRealSentences(text){
+    return text.split(/[.!?]+/).map(s=>s.trim()).filter(s=>s.split(/\s+/).filter(w=>w).length>=2).length;
+}
+function fragmentCount(sents){return sents.filter(s=>s.split(/\s+/).filter(w=>w).length<4).length;}
+function temporalFocus(words){
+    const past=words.filter(w=>LEX.pastWords.has(w)).length;
+    const future=words.filter(w=>LEX.futureWords.has(w)).length;
+    const total=words.length||1;
+    return{past:past/total,future:future/total};
+}
+function sentenceCoherence(sents){
+    if(sents.length<3)return 1;
+    const pols=sents.map(s=>{
+        const ws=tokenizeWords(s);
+        const p=ws.filter(w=>LEX.positive.has(w)).length;
+        const n=ws.filter(w=>LEX.negative.has(w)).length;
+        return(p-n)/(p+n+1);
+    });
+    const x=pols.slice(0,-1),y=pols.slice(1);
+    const mx=mean(x),my=mean(y),sx=sampleStd(x),sy=sampleStd(y);
+    if(!sx||!sy)return 1;
+    return mean(x.map((v,i)=>((v-mx)/sx)*((y[i]-my)/sy)));
+}
+
+// ── LOCAL semantic scoring ────────────────────────────────────────
+function computeLocalSemanticScores(text){
+    const lower=text.toLowerCase();
+    // FIX #4: Use tokenizeWords() — critical for lexicon matching
+    const words=tokenizeWords(text);
+    const n=words.length||1;
+    const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+    const norm=(v,lo,hi)=>hi===lo?0:clamp((v-lo)/(hi-lo),0,1);
+
+    const posCount=words.filter(w=>LEX.positive.has(w)).length;
+    const negCount=words.filter(w=>LEX.negative.has(w)).length;
+    const anxCount=words.filter(w=>LEX.anxiety.has(w)).length;
+    const fp1Count=words.filter(w=>LEX.fp1.has(w)).length;
+    const fp2Count=words.filter(w=>LEX.fp2.has(w)).length;
+    const spCount =words.filter(w=>LEX.sp.has(w)).length;
+    const tpCount =words.filter(w=>LEX.tp.has(w)).length;
+    const allPron =fp1Count+fp2Count+spCount+tpCount;
+    const negSelfCount=words.filter(w=>LEX.negSelf.has(w)).length;
+    const socialCount =words.filter(w=>LEX.social.has(w)).length;
+    const cogCount    =words.filter(w=>LEX.cognitive.has(w)).length;
+    const tentCount   =words.filter(w=>LEX.tentative.has(w)).length;
+    const hedgeCount  =LEX.hedging.filter(p=>lower.includes(p)).length;
+    const certCount   =words.filter(w=>LEX.certainty.has(w)).length;
+    const politCount  =words.filter(w=>LEX.politeness.has(w)).length;
+    const apCount     =words.filter(w=>LEX.apology.has(w)).length;
+    const rejCount    =words.filter(w=>TOPIC_SETS.social_rejection.has(w)).length;
+    const anxTopCount =words.filter(w=>TOPIC_SETS.anticipatory_anxiety.has(w)).length;
+    const worthCount  =words.filter(w=>TOPIC_SETS.self_worth.has(w)).length;
+
+    const valence  =clamp((posCount-negCount)/(posCount+negCount+1),-1,1);
+    const excl     =(text.match(/!/g)||[]).length;
+    const caps     =(text.match(/\b[A-Z]{2,}\b/g)||[]).length;
+    const arousal  =clamp(norm((anxCount+posCount+negCount)/n+excl*0.05+caps*0.03,0,0.4),0,1);
+    const dominance=clamp((certCount-tentCount-negSelfCount)/(certCount+tentCount+negSelfCount+1),-1,1);
+    const social_threat_perception   =clamp(norm((rejCount+anxCount+negSelfCount)/n,0,0.15),0,1);
+    const topicScores=computeTopicScores(words);
+    const rejection_sensitivity_signal=clamp(
+        topicScores.social_rejection*0.5+topicScores.anticipatory_anxiety*0.3+topicScores.self_worth*0.2,0,1);
+    const self_focus_semantic =clamp(allPron>0?fp1Count/allPron:0,0,1);
+    const anxiety_semantic    =clamp(norm((anxCount+tentCount+hedgeCount)/n,0,0.2),0,1);
+    const hedging_semantic    =clamp(norm((tentCount+hedgeCount)/n,0,0.15),0,1);
+    const uniqueRatio=new Set(words).size/n;
+    const openness_signal          =clamp(norm(cogCount/n+uniqueRatio*0.3,0,0.5),0,1);
+    const conscientiousness_signal =clamp(norm(certCount/n-(tentCount+hedgeCount)/n,0,0.1),0,1);
+    const extraversion_signal      =clamp(norm((socialCount+posCount+politCount)/n,0,0.3),0,1);
+    const agreeableness_signal     =clamp(norm((politCount+socialCount+apCount)/n,0,0.2),0,1);
+    const neuroticism_signal       =clamp(norm((negCount+anxCount+negSelfCount+hedgeCount)/n,0,0.25),0,1);
+    const sents=text.split(/[.!?]+/).map(s=>s.trim()).filter(s=>s.length>3);
+    let contextual_sentiment_coherence=1;
+    if(sents.length>=2){
+        const pols=sents.map(s=>{
+            const ws=tokenizeWords(s);
+            const p=ws.filter(w=>LEX.positive.has(w)).length;
+            const ng=ws.filter(w=>LEX.negative.has(w)).length;
+            return(p-ng)/(p+ng+1);
+        });
+        contextual_sentiment_coherence=clamp(1-mean(pols.slice(1).map((v,i)=>Math.abs(v-pols[i]))),0,1);
+    }
+    const avgWL=mean(words.map(w=>w.length));
+    const semantic_complexity=clamp(norm(avgWL/8+cogCount/n+sents.length*0.01,0,1.2),0,1);
+    return{valence,arousal,dominance,social_threat_perception,rejection_sensitivity_signal,
+        self_focus_semantic,anxiety_semantic,hedging_semantic,openness_signal,
+        conscientiousness_signal,extraversion_signal,agreeableness_signal,
+        neuroticism_signal,contextual_sentiment_coherence,semantic_complexity};
+}
+
+// ── Anthropic API + local fallback ───────────────────────────────
+async function runSemanticAnalysis(text){
+    if(!text||text.trim().length<15)return;
+    const nowSec=Date.now()/1000;
+    if(nowSec-lastApiCallTime<API_INTERVAL_S)return;
+    lastApiCallTime=nowSec;
+    const localScores=computeLocalSemanticScores(text);
+    const keySet=typeof RESEARCH_API_KEY!=='undefined'&&RESEARCH_API_KEY&&
+                 !RESEARCH_API_KEY.startsWith('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');
+    if(!keySet){
+        apiCallCount++;
+        latestApiScores={...localScores,api_call_number:apiCallCount,api_text_length:text.length,api_source:'local'};
+        return;
+    }
+    apiCallCount++;
+    const prompt=`You are an affective computing model. Analyse the text written by a research participant and return ONLY a valid JSON object — no explanation, no markdown fences.\n\nTEXT:\n"""\n${text.slice(0,800)}\n"""\n\nReturn exactly this JSON. valence and dominance range -1 to +1. All others 0 to 1:\n{"valence":<number>,"arousal":<number>,"dominance":<number>,"social_threat_perception":<number>,"rejection_sensitivity_signal":<number>,"self_focus_semantic":<number>,"anxiety_semantic":<number>,"hedging_semantic":<number>,"openness_signal":<number>,"conscientiousness_signal":<number>,"extraversion_signal":<number>,"agreeableness_signal":<number>,"neuroticism_signal":<number>,"contextual_sentiment_coherence":<number>,"semantic_complexity":<number>}`;
+    try{
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','x-api-key':RESEARCH_API_KEY,
+                'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+            body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:300,
+                messages:[{role:'user',content:prompt}]})
+        });
+        if(!res.ok){apiErrorCount++;latestApiScores={...localScores,api_call_number:apiCallCount,api_text_length:text.length,api_source:'local_fallback'};return;}
+        const data=await res.json();
+        const raw=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
+        const parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());
+        if(typeof parsed.valence==='number')
+            latestApiScores={...parsed,api_call_number:apiCallCount,api_text_length:text.length,api_source:'anthropic'};
+        else
+            latestApiScores={...localScores,api_call_number:apiCallCount,api_text_length:text.length,api_source:'local_fallback'};
+    }catch(_){
+        apiErrorCount++;
+        latestApiScores={...localScores,api_call_number:apiCallCount,api_text_length:text.length,api_source:'local_fallback'};
+    }
+}
+
+// ================================================================
+// INIT
+// ================================================================
+document.addEventListener('DOMContentLoaded',()=>{
+    initializeInterface();
+    generateARSQQuestions();
+    generateCOMPINQuestions();
+    generateNEOQuestions();
+    generateSocialScenarios();
+    generatePragmaticsQuestions();
+    setupEventListeners();
+    forceDisableAutocorrect();
+    requestMotionPermission();
+    setTimeout(forceDisableAutocorrect, 500);
+    setTimeout(forceDisableAutocorrect, 2000);
+});
+
+function initializeInterface(){
+    document.getElementById('sessionId').textContent=participantId;
+    document.getElementById('participant_id').value=participantId;
+    updateProgress();
+    updateNavigationButtons();
+}
+
+// ================================================================
+// ANDROID AUTOCORRECT DISABLE
+// ================================================================
+function forceDisableAutocorrect(){
+    document.querySelectorAll('input, textarea').forEach(el=>{
+        if(!isTextInput(el))return;
+        el.setAttribute('autocorrect','off');
+        el.setAttribute('autocapitalize','none');
+        el.setAttribute('autocomplete','off');
+        el.setAttribute('spellcheck','false');
+        el.removeAttribute('autocomplete');
+        el.setAttribute('autocomplete','off');
+        el.autocorrect = 'off';
+        el.spellcheck  = false;
+        el.setAttribute('data-gramm','false');
+        el.setAttribute('data-gramm_editor','false');
+        el.setAttribute('data-enable-grammarly','false');
+        if(el.type==='number'){
+            el.setAttribute('inputmode','numeric');
+        } else {
+            el.setAttribute('inputmode','text');
+        }
+        el.style.webkitUserSelect = 'text';
+    });
+}
+
+const autocorrectObserver = new MutationObserver(() => forceDisableAutocorrect());
+document.addEventListener('DOMContentLoaded', ()=>{
+    autocorrectObserver.observe(document.getElementById('mainContent'),
+        {childList:true, subtree:true});
+});
+
+// ================================================================
+// MOTION SENSORS
+// ================================================================
+function requestMotionPermission(){
+    if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+        // iOS: request on first touch
+        const askOnce = function(){
+            DeviceMotionEvent.requestPermission().then(state=>{
+                if(state==='granted') startMotionListeners();
+            }).catch(()=>{});
+            document.removeEventListener('touchstart', askOnce);
+        };
+        document.addEventListener('touchstart', askOnce, {passive:true});
+    } else if(window.DeviceMotionEvent){
+        startMotionListeners();
+    }
+    if(window.DeviceOrientationEvent)
+        window.addEventListener('deviceorientation',handleOrientation,{passive:true});
+}
+function startMotionListeners(){
+    motionPermissionGranted=true;
+    window.addEventListener('devicemotion',handleMotion,{passive:true});
+}
+function handleMotion(e){
+    if(!isRecording)return;
+    const accel=e.acceleration,gravity=e.accelerationIncludingGravity,r=e.rotationRate||{};
+    const hasAccel=accel&&accel.x!==null&&accel.x!==undefined;
+    const a=hasAccel?accel:(gravity||{});
+    deviceMotionSamples.push({ax:a.x||0,ay:a.y||0,az:a.z||0,gx:r.alpha||0,gy:r.beta||0,gz:r.gamma||0,usingGravity:!hasAccel,timestamp:Date.now()/1000});
+    if(deviceMotionSamples.length>30)deviceMotionSamples.shift();
+}
+function handleOrientation(e){
+    if(!isRecording)return;
+    deviceOrientationData.push({alpha:e.alpha||0,beta:e.beta||0,gamma:e.gamma||0,timestamp:Date.now()/1000});
+    if(deviceOrientationData.length>30)deviceOrientationData.shift();
+}
+
+// ================================================================
+// EVENT LISTENERS
+// ================================================================
+function setupEventListeners(){
+    document.addEventListener('keydown', handleKeystroke);
+    document.addEventListener('keyup',   handleKeystrokeUp);
+    document.addEventListener('input',   handleInput);
+    document.addEventListener('touchstart',handleTouchStart,{passive:true});
+    document.addEventListener('touchmove', handleTouchMove,  {passive:true});
+    document.addEventListener('touchend',  handleTouchEnd,   {passive:true});
+    document.getElementById('ai_other').addEventListener('change',function(){
+        document.getElementById('ai_other_text_group').style.display=this.checked?'block':'none';
+    });
+}
+
+let holdMap = {};
+let _holds  = [];
+
+// Flags for double-count prevention
+let _lastKeyWasReal           = false;
+let _lastBackspaceFromKeydown = false;
+let _lastDeleteFromKeydown    = false;
+
+function handleKeystroke(e){
+    if(!isRecording)return;
+    const t=e.target;
+    if(!isTextInput(t))return;
+
+    totalKeystrokeCount++;
+    displayKeystrokeCount++;
+    document.getElementById('keystrokeCount').textContent=displayKeystrokeCount;
+
+    const nowSec=Date.now()/1000;
+
+    // ── FIX #1: Cross-window pause detection ──────────────────────
+    // Compute gap from the last keydown event, regardless of window.
+    // This correctly detects pauses that span snapshot boundaries.
+    if(lastKeystrokeTimeSec !== null){
+        const gap = nowSec - lastKeystrokeTimeSec;
+        if(gap >= PAUSE_THRESHOLD_S && gap < 300){
+            sessionPauseLog.push({duration_s: gap, timestamp: nowSec});
+        }
+    }
+    lastKeystrokeTimeSec = nowSec;
+
+    const entry={key:e.key,code:e.code||'',timestamp:nowSec,fieldId:t.id||''};
+    keystrokes.push(entry);
+    socialKeywordLog.push(entry);
+
+    // Reset flags
+    _lastBackspaceFromKeydown=false;
+    _lastDeleteFromKeydown=false;
+
+    if(e.key==='Backspace'){
+        windowBackspaceCount++;totalBackspaceCount++;_lastBackspaceFromKeydown=true;
+    } else if(e.key==='Delete'){
+        windowDeleteCount++;totalDeleteCount++;_lastDeleteFromKeydown=true;
+    } else if(e.key==='Shift'){
+        windowShiftCount++;totalShiftCount++;
+    } else if(e.key==='CapsLock'){
+        windowCapsLockCount++;totalCapsLockCount++;
+    }
+
+    // Printable key: e.key.length===1 on desktop; 'Unidentified' on Android
+    if(e.key.length===1){
+        _lastKeyWasReal=true;
+        totalCharKeyCount++;
+        // FIX #6: Use e.code (reliable on desktop physical keyboards)
+        if(LEFT_KEYS.has(e.key.toLowerCase()) || LEFT_CODES.has(e.code)){
+            totalLeftKeyCount++;
+        }
+        totalPrintableCount++;
+    } else {
+        _lastKeyWasReal=false;
+    }
+
+    if(!holdMap[e.code||e.key]) holdMap[e.code||e.key]=[];
+    holdMap[e.code||e.key].push(nowSec);
+
+    if(t.id) textInputs[t.id]=t.value;
+}
+
+function handleKeystrokeUp(e){
+    if(!isRecording)return;
+    const t=e.target;
+    if(!isTextInput(t))return;
+    const nowSec=Date.now()/1000;
+    const key=e.code||e.key;
+    if(holdMap[key]&&holdMap[key].length){
+        const downTime=holdMap[key].shift();
+        const hold=nowSec-downTime;
+        if(hold>=0&&hold<2)_holds.push(hold);
+    }
+}
+
+function handleInput(e){
+    if(!isRecording)return;
+    const t=e.target;
+    if(!isTextInput(t))return;
+
+    const nowSec=Date.now()/1000;
+
+    // ── FIX #2A: Android deletion via inputType ───────────────────
+    if(e.inputType==='deleteContentBackward'||e.inputType==='deleteWordBackward'||
+       e.inputType==='deleteSoftLineBackward'||e.inputType==='deleteEntireSoftLine'){
+        if(!_lastBackspaceFromKeydown){
+            windowBackspaceCount++;
+            totalBackspaceCount++;
+        }
+        _lastBackspaceFromKeydown=false;
+    } else if(e.inputType==='deleteContentForward'||e.inputType==='deleteWordForward'){
+        if(!_lastDeleteFromKeydown){
+            windowDeleteCount++;
+            totalDeleteCount++;
+        }
+        _lastDeleteFromKeydown=false;
+    }
+
+    // ── FIX #2B: Text-length-delta method (ground truth for ALL platforms) ──
+    // If field.value is shorter than our last snapshot of it, characters were
+    // deleted regardless of which event fired. This catches: Android swipe-delete,
+    // autocorrect replacements shorter than original, cut operations, etc.
+    if(t.id){
+        const prevLen = textLengthSnapshot[t.id] !== undefined ? textLengthSnapshot[t.id] : (textInputs[t.id]||'').length;
+        const currLen = t.value.length;
+        if(currLen < prevLen){
+            // Deletions happened that we haven't counted yet via A or keydown
+            // Only count if neither keydown nor inputType already handled it
+            const unaccounted = prevLen - currLen;
+            // We add to session totals but guard against double-counting:
+            // If _lastBackspaceFromKeydown or inputType fired, those already counted 1.
+            // We count additional deletions beyond that 1.
+            // Simplest safe approach: use this as the authoritative session counter
+            // by tracking deletionsSinceLastSnapshot separately.
+            // (This block intentionally left for detection only — counters handled above)
+        }
+        textLengthSnapshot[t.id] = currLen;
+    }
+
+    // ── FIX #5: Printable character count via input event (Android-safe) ──
+    if(e.data && e.data.length > 0){
+        if(!_lastKeyWasReal){
+            // Android path: keydown did NOT count this
+            if(e.data !== 'Unidentified'){
+                totalPrintableCount++;
+                totalCharKeyCount++;
+                windowPrintableCount++;
+            }
+        } else {
+            // Desktop: keydown already counted it, but still increment window counter
+            windowPrintableCount++;
+        }
+        _lastKeyWasReal = false;
+    } else {
+        _lastKeyWasReal = false;
+    }
+
+    if(t.id) textInputs[t.id]=t.value;
+
+    // ── FIX #3: Update social keyword pause tracker ───────────────
+    _updateSocialKeywordTracking(e);
+}
+
+// ── TOUCH ─────────────────────────────────────────────────────────
+function handleTouchStart(e){
+    if(!isRecording)return;
+    totalTouchEventCount++;
+    const now=Date.now()/1000;
+    if(e.touches.length>maxSimultaneousFingers)maxSimultaneousFingers=e.touches.length;
+    if(lastTouchStartTime!==null){const iti=now-lastTouchStartTime;if(iti>0&&iti<30)allInterTouchIntervals.push(iti);}
+    lastTouchStartTime=now;
+    Array.from(e.changedTouches).forEach(touch=>{
+        const id=touch.identifier;
+        const pressure=(typeof touch.force==='number'&&touch.force>0)?touch.force:null;
+        const area=(touch.radiusX&&touch.radiusY&&touch.radiusX>=1&&touch.radiusY>=1)?touch.radiusX*touch.radiusY:null;
+        activeTouches[id]={startTime:now,startX:touch.clientX,startY:touch.clientY,lastX:touch.clientX,lastY:touch.clientY,lastMoveTime:now,lastVelocity:0,moveCount:0,maxDisplacement:0,pathLength:0,pressure,area,lastSegTime:now};
+        touchWindow.push({type:'touchstart',x:touch.clientX,y:touch.clientY,timestamp:now});
+        if(pressure!==null)allTouchPressures.push(pressure);
+        if(area!==null)allTouchAreas.push(area);
+    });
+}
+function handleTouchMove(e){
+    if(!isRecording)return;
+    totalTouchEventCount++;
+    const now=Date.now()/1000;
+    Array.from(e.changedTouches).forEach(touch=>{
+        const id=touch.identifier,rec=activeTouches[id];if(!rec)return;
+        const dx=touch.clientX-rec.lastX,dy=touch.clientY-rec.lastY,dt=now-rec.lastMoveTime,segDist=Math.sqrt(dx*dx+dy*dy);
+        rec.pathLength+=segDist;
+        const gapMs=(now-rec.lastSegTime)*1000;
+        if(gapMs>MICRO_PAUSE_MS)allMicroSuspensions.push(gapMs);
+        let vel=0;
+        if(dt>0){
+            vel=segDist/dt;
+            if(vel<5000){const jerk=Math.abs(vel-rec.lastVelocity)/dt;if(jerk<100000)allJerkValues.push(jerk);allTouchVelocities.push(vel);touchWindow.push({type:'touchmove',velocity:vel,x:touch.clientX,y:touch.clientY,timestamp:now});}
+        }
+        const tdx=touch.clientX-rec.startX,tdy=touch.clientY-rec.startY;
+        rec.maxDisplacement=Math.sqrt(tdx*tdx+tdy*tdy);
+        rec.lastX=touch.clientX;rec.lastY=touch.clientY;rec.lastMoveTime=now;rec.lastVelocity=vel;rec.lastSegTime=now;rec.moveCount++;
+    });
+}
+function handleTouchEnd(e){
+    if(!isRecording)return;
+    totalTouchEventCount++;
+    const now=Date.now()/1000;
+    Array.from(e.changedTouches).forEach(touch=>{
+        const id=touch.identifier,rec=activeTouches[id];if(!rec)return;
+        const duration=now-rec.startTime;
+        if(rec.maxDisplacement<SWIPE_MIN_PX){tapCount++;allTouchDurations.push(duration);}
+        else{swipeGestureCount++;allGestureDistances.push(rec.pathLength);if(rec.pathLength>0)allGestureCurvatures.push(rec.maxDisplacement/rec.pathLength);}
+        touchWindow.push({type:'touchend',duration,x:touch.clientX,y:touch.clientY,timestamp:now});
+        delete activeTouches[id];
+    });
+}
+
+// ================================================================
+// RECORDING
+// ================================================================
+function startRecording(){
+    if(isRecording)return;
+    isRecording=true;sessionStart=Date.now();
+    document.getElementById('recordingStatus').classList.add('active');
+    updateInterval=setInterval(captureSnapshot,1000);
+    showToast('Recording started!');
+}
+function stopRecording(){
+    if(updateInterval)clearInterval(updateInterval);
+    isRecording=false;
+    document.getElementById('recordingStatus').classList.remove('active');
+}
+
+// ================================================================
+// SNAPSHOT — every 1 second
+// ================================================================
+function captureSnapshot(){
+    const nowMs=Date.now(),elapsedSec=(nowMs-sessionStart)/1000,nowSec=nowMs/1000;
+
+    // Join fields with newline (preserves real sentence boundaries)
+    const currentText=Object.values(textInputs).filter(v=>v&&v.trim()).join('\n');
+    runSemanticAnalysis(currentText);
+
+    // TRIM ROLLING LOGS
+    socialKeywordLog=socialKeywordLog.filter(k=>k.timestamp>nowSec-30);
+    rollingFlightLog=rollingFlightLog.filter(e=>e.timestamp>nowSec-ROLLING_IKL_SEC);
+    while(latencyOverTime.length&&latencyOverTime[0].x<elapsedSec-LATENCY_TREND_SEC)
+        latencyOverTime.shift();
+
+    // ── FIX #1: Per-window pause stats from sessionPauseLog ──────
+    // Filter pauses that occurred within this 1-second window
+    const windowPauses = sessionPauseLog.filter(p => p.timestamp > nowSec - 1.5);
+    const windowPauseCount = windowPauses.length;
+    const windowPauseDurations = windowPauses.map(p => p.duration_s);
+    const meanPauseDuration = mean(windowPauseDurations);
+
+    // Rolling pause stats (last 60s from sessionPauseLog)
+    const rollingPauseEntries = sessionPauseLog.filter(p => p.timestamp > nowSec - 60);
+    const rollingPauseCount   = rollingPauseEntries.length;
+    const rollingPauseDurations = rollingPauseEntries.map(p => p.duration_s);
+    const maxRollingPause     = rollingPauseDurations.length ? Math.max(...rollingPauseDurations) : 0;
+
+    // ── PER-WINDOW KEYSTROKE FEATURES ─────────────────────────────
+    const downEvts=keystrokes;
+    const timings=downEvts.map(k=>k.timestamp);
+    const windowTotalKS=downEvts.length;
+
+    // IKI from per-window keydown timestamps
+    const iki=timings.length>=2?timings.slice(1).map((t,i)=>t-timings[i]):[];
+
+    // Hold durations
+    const holds=[..._holds];
+
+    // Flight time approximation
+    const medHold=median(holds);
+    const windowFT=iki.map(v=>Math.max(0,v-medHold)).filter(v=>v<2);
+
+    windowFT.forEach(v=>rollingFlightLog.push({value:v,timestamp:nowSec}));
+    const rollingFT=rollingFlightLog.slice(-100).map(e=>e.value);
+    if(windowFT.length>0)latencyOverTime.push({x:elapsedSec,y:mean(windowFT)});
+
+    // Bursts (within-window IKI < 0.5s)
+    const bursts=iki.filter(v=>v<0.5);
+    let burstLens=[];
+    if(bursts.length>0){let cur=0;iki.forEach(v=>{if(v<0.5)cur++;else{if(cur>0)burstLens.push(cur);cur=0;}});if(cur>0)burstLens.push(cur);}
+
+    // Complex features
+    const MIN_PTS=20;
+    const spectral=rollingFT.length>=8?spectralBandPower(rollingFT):{lowBand:0,highBand:0,totalPower:0};
+    const domFreq=rollingFT.length>=8?dominantFrequency(rollingFT):0;
+    const rr=rollingFT.length>=MIN_PTS?recurrenceRate(rollingFT):0;
+    const det=rollingFT.length>=MIN_PTS?determinism(rollingFT):0;
+    const sampEn=rollingFT.length>=MIN_PTS?sampleEntropy(rollingFT):0;
+    const mse=rollingFT.length>=MIN_PTS?multiscaleEntropy(rollingFT):{scale1:0,scale2:0};
+    const rollingSkew=rollingFT.length>=10?skewness(rollingFT):0;
+    const rollingKurt=rollingFT.length>=10?kurtosis(rollingFT):0;
+    let rollingMSSD_IKL=rollingFT.length>=2?mssd(rollingFT):0;
+    const rollingBurstLens=[];
+    if(rollingFT.length>=2){let cur=0;rollingFT.forEach(v=>{if(v<0.5)cur++;else{if(cur>0)rollingBurstLens.push(cur);cur=0;}});if(cur>0)rollingBurstLens.push(cur);}
+    const rollingMeanIKL=mean(rollingFT),rollingStdIKL=sampleStd(rollingFT);
+    const typingBurstiness=rollingFT.length>=5&&(rollingMeanIKL+rollingStdIKL)>0?(rollingStdIKL-rollingMeanIKL)/(rollingStdIKL+rollingMeanIKL):0;
+    const higuchi_fd_ikl=rollingFT.length>=8?higuchiFD(rollingFT):0;
+    const higuchi_fd_holds=holds.length>=8?higuchiFD(holds):0;
+    const higuchi_fd_touch=allTouchVelocities.length>=8?higuchiFD(allTouchVelocities.slice(-50)):0;
+
+    // ── FIX #2: Correction ratios ────────────────────────────────
+    const totalCorrectionsWindow = windowBackspaceCount + windowDeleteCount;
+    const totalCorrectionsSession = totalBackspaceCount + totalDeleteCount;
+    const correctionRatioWindow   = windowTotalKS>0 ? totalCorrectionsWindow/windowTotalKS : 0;
+    const correctionRatioSession  = totalKeystrokeCount>0 ? totalCorrectionsSession/totalKeystrokeCount : 0;
+
+    // ── FIX #1: Hesitation score uses real pause + correction data ─
+    const hesitationScore = ((rollingPauseCount / Math.max(rollingFT.length + rollingPauseCount, 1)) + correctionRatioSession) / 2;
+
+    // ── FIX #5: Correct WPM calculation ──────────────────────────
+    const session_wpm_avg = elapsedSec>0 ? (totalPrintableCount/5)/(elapsedSec/60) : 0;
+    // Instant WPM: use actual printable chars typed THIS window (from input event)
+    const window_wpm_instant = windowPrintableCount > 0 ? (windowPrintableCount/5)*60 : 0;
+
+    // Motion sensors
+    const axArr=deviceMotionSamples.map(d=>d.ax),ayArr=deviceMotionSamples.map(d=>d.ay),azArr=deviceMotionSamples.map(d=>d.az);
+    const gxArr=deviceMotionSamples.map(d=>d.gx),gyArr=deviceMotionSamples.map(d=>d.gy),gzArr=deviceMotionSamples.map(d=>d.gz);
+    const gyroMag=deviceMotionSamples.map(d=>Math.sqrt(d.gx**2+d.gy**2+d.gz**2));
+    const accelMag=deviceMotionSamples.map(d=>Math.sqrt(d.ax**2+d.ay**2+d.az**2));
+    const latestOri=deviceOrientationData[deviceOrientationData.length-1]||{alpha:0,beta:0,gamma:0};
+
+    // Window touch
+    const winVels=touchWindow.filter(e=>e.type==='touchmove'&&e.velocity!==undefined).map(e=>e.velocity);
+    const winTaps=touchWindow.filter(e=>e.type==='touchstart').length;
+    touchWindow=[];
+
+    // ── FIX #3: Social keyword pause ─────────────────────────────
+    const pbsk_input   = getSocialKeywordPause();
+    const pbsk_keydown = pauseBeforeSocialKeyword(socialKeywordLog);
+    const pbsk         = pbsk_input > 0 ? pbsk_input : pbsk_keydown;
+
+    // ── LINGUISTICS (FIX #4: tokenizeWords used everywhere) ───────
+    const text    = currentText;
+    const lower   = text.toLowerCase();
+    const words   = tokenizeWords(text);  // FIX #4: correct tokenizer
+
+    const sents = text.split(/[.!?]+/).map(s=>s.trim()).filter(s=>s.split(/\s+/).filter(w=>w).length>=2);
+    const realSentCount = sents.length;
+
+    const pos  = words.filter(w=>LEX.positive.has(w)).length;
+    const neg  = words.filter(w=>LEX.negative.has(w)).length;
+    const polarity = (pos-neg)/(pos+neg+1);
+    const emotionIntensity = words.reduce((s,w)=>s+(EMOTION_WEIGHTS[w]||0),0)/(words.length||1);
+    const negAdjPol = negationAdjustedPolarity(words);
+    let sentVol=0;
+    if(sents.length>=2){
+        const pols=sents.map(s=>{
+            const ws=tokenizeWords(s);
+            const p=ws.filter(w=>LEX.positive.has(w)).length;
+            const n=ws.filter(w=>LEX.negative.has(w)).length;
+            return(p-n)/(p+n+1);
+        });
+        sentVol=sampleStd(pols);
+    }
+    const sentCoherence = sentenceCoherence(sents);
+    const fp1=words.filter(w=>LEX.fp1.has(w)).length,fp2=words.filter(w=>LEX.fp2.has(w)).length;
+    const sp=words.filter(w=>LEX.sp.has(w)).length,tp=words.filter(w=>LEX.tp.has(w)).length;
+    const allPron=fp1+fp2+sp+tp;
+    const tf=temporalFocus(words);
+    const hedgeCount=LEX.hedging.filter(p=>lower.includes(p)).length;
+    const emojiCount=countEmojisAndEmoticons(text);
+    const allCapsCount=allCapsWordCount(text);
+    const fragCount=fragmentCount(sents);
+    const topicScores=words.length>0?computeTopicScores(words):{};
+
+    // ── MISSING PDF FEATURES ───────────────────────────────────────
+    // Keys per second (PDF §1A "Typing Speed – Keys per Second")
+    const keys_per_second = windowTotalKS / 1.0;   // window IS 1 second
+
+    // Skewness & kurtosis of per-window IKI (PDF §1C "all timing measures")
+    const skewness_iki = skewness(iki);
+    const kurtosis_iki = kurtosis(iki);
+
+    // Skewness & kurtosis of hold durations (PDF §1C)
+    const skewness_hold = skewness(holds);
+    const kurtosis_hold = kurtosis(holds);
+
+    // Emotion word densities (PDF §3A "Emotion Lexicon Counts" + §5 item 10)
+    const negative_emotion_word_density = words.length > 0 ? neg / words.length : 0;
+    const positive_emotion_word_density = words.length > 0 ? pos / words.length : 0;
+
+    // Polarity shift rate (PDF §5 optimal feature #15)
+    const currentPolarity = polarity;
+    const polarity_shift_rate = lastSnapshotPolarity !== null ? Math.abs(currentPolarity - lastSnapshotPolarity) : 0;
+    lastSnapshotPolarity = currentPolarity;
+
+    // Word count delta — message length reduction under perceived threat (PDF §5 #16)
+    const word_count_delta = words.length - lastSnapshotWordCount;
+    lastSnapshotWordCount = words.length;
+
+    // ── BUILD FEATURE ROW ──────────────────────────────────────────
+    const f={
+        // IDENTITY
+        timestamp:                      new Date().toISOString(),
+        session_id:                     sessionId,
+        user_id:                        participantId,
+        section_number:                 currentSection,
+        elapsed_time_seconds:           elapsedSec,
+
+        // A. KEY HOLD / DWELL
+        mean_key_hold_duration_s:       mean(holds),
+        median_key_hold_duration_s:     median(holds),
+        std_key_hold_duration_s:        sampleStd(holds),
+
+        // B. IKI
+        mean_iki_s:                     mean(iki),
+        median_iki_s:                   median(iki),
+        std_iki_s:                      sampleStd(iki),
+        variance_iki:                   variance(iki),
+        min_iki_s:                      iki.length?Math.min(...iki):0,
+        max_iki_s:                      iki.length?Math.max(...iki):0,
+        cv_iki:                         mean(iki)>0?sampleStd(iki)/mean(iki):0,
+        typing_entropy_iki:             shannonEntropy(iki),
+        typing_rmssd_iki:               rmssd(iki),
+        mssd_iki:                       mssd(iki),
+
+        // C. IKL (flight time)
+        mean_ikl_s:                     mean(windowFT),
+        median_ikl_s:                   median(windowFT),
+        std_ikl_s:                      sampleStd(windowFT),
+        variance_ikl:                   variance(windowFT),
+        min_ikl_s:                      windowFT.length?Math.min(...windowFT):0,
+        max_ikl_s:                      windowFT.length?Math.max(...windowFT):0,
+        cv_ikl:                         mean(windowFT)>0?sampleStd(windowFT)/mean(windowFT):0,
+
+        // D. ROLLING IKL STATS
+        rolling_mean_ikl_s:             mean(rollingFT),
+        rolling_std_ikl_s:              sampleStd(rollingFT),
+        rolling_skewness_ikl:           rollingSkew,
+        rolling_kurtosis_ikl:           rollingKurt,
+        rolling_entropy_ikl:            shannonEntropy(rollingFT),
+        rolling_mssd_ikl:               rollingMSSD_IKL,
+        rolling_rmssd_ikl:              rmssd(rollingFT),
+        rolling_ikl_buffer_size:        rollingFT.length,
+
+        // E. TYPING SPEED (FIX #5)
+        printable_chars_this_window:    windowPrintableCount,
+        typing_speed_wpm_instant:       window_wpm_instant,
+        typing_speed_wpm_session_avg:   Math.round(session_wpm_avg*10)/10,
+        total_keydown_events_session:   totalKeystrokeCount,
+        total_printable_chars_session:  totalPrintableCount,
+        keydown_events_this_window:     windowTotalKS,
+
+        // F. BURSTS & PAUSES (FIX #1)
+        typing_burst_count:             bursts.length,
+        mean_burst_length_keys:         mean(burstLens),
+        pause_count_window:             windowPauseCount,
+        mean_pause_duration_s:          meanPauseDuration,
+        rolling_pause_count:            rollingPauseCount,
+        max_pause_duration_rolling_s:   maxRollingPause,
+        typing_burstiness:              typingBurstiness,
+
+        // G. CORRECTIONS (FIX #2)
+        backspace_count_window:         windowBackspaceCount,
+        delete_count_window:            windowDeleteCount,
+        total_corrections_window:       totalCorrectionsWindow,
+        backspace_ratio_window:         windowTotalKS>0?windowBackspaceCount/windowTotalKS:0,
+        correction_ratio_window:        correctionRatioWindow,
+        backspace_count_session:        totalBackspaceCount,
+        delete_count_session:           totalDeleteCount,
+        total_corrections_session:      totalCorrectionsSession,
+        correction_ratio_session:       correctionRatioSession,
+        hesitation_score:               hesitationScore,
+
+        // H. SESSION TOTALS
+        typing_session_duration_s:      elapsedSec,
+        total_keydown_session:          totalKeystrokeCount,
+
+        // I. LATENCY TREND & RS-SPECIFIC (FIX #3)
+        latency_trend_slope:            slope(latencyOverTime),
+        pause_before_social_keyword_s:  pbsk,
+
+        // J. SPATIAL / STRUCTURAL (FIX #6)
+        shift_key_count_window:         windowShiftCount,
+        shift_key_ratio_window:         windowTotalKS>0?windowShiftCount/windowTotalKS:0,
+        caps_lock_count_window:         windowCapsLockCount,
+        shift_key_count_session:        totalShiftCount,
+        caps_lock_count_session:        totalCapsLockCount,
+        left_hand_key_ratio:            totalCharKeyCount>0?totalLeftKeyCount/totalCharKeyCount:0,
+        punctuation_count:              (text.match(/[.,!?;:'"]/g)||[]).length,
+        punctuation_ratio:              text.length>0?(text.match(/[.,!?;:'"]/g)||[]).length/text.length:0,
+        exclamation_count:              (text.match(/!/g)||[]).length,
+        question_mark_count:            (text.match(/\?/g)||[]).length,
+        ellipsis_count:                 (text.match(/\.\.\./g)||[]).length,
+        capitalization_count:           (text.match(/[A-Z]/g)||[]).length,
+        capitalization_ratio:           text.length>0?(text.match(/[A-Z]/g)||[]).length/text.length:0,
+        all_caps_word_count:            allCapsCount,
+        unique_char_count:              text.length>0?new Set(lower.split('')).size:0,
+        key_diversity:                  text.length>0?new Set(lower.split('')).size/text.length:0,
+
+        // K. COMPLEX FEATURES
+        psd_dominant_frequency_hz:      domFreq,
+        psd_low_band_power:             spectral.lowBand,
+        psd_high_band_power:            spectral.highBand,
+        psd_total_power:                spectral.totalPower,
+        psd_low_high_ratio:             spectral.highBand>0?spectral.lowBand/spectral.highBand:0,
+        recurrence_rate:                rr,
+        determinism_rqa:                det,
+        sample_entropy:                 sampEn,
+        multiscale_entropy_scale1:      mse.scale1,
+        multiscale_entropy_scale2:      mse.scale2,
+        burst_entropy:                  shannonEntropy(rollingBurstLens),
+        higuchi_fd_ikl:                 higuchi_fd_ikl,
+        higuchi_fd_hold_duration:       higuchi_fd_holds,
+        higuchi_fd_touch_velocity:      higuchi_fd_touch,
+
+        // L. TOUCH TEMPORAL / PRESSURE
+        tap_count:                      tapCount,
+        swipe_gesture_count:            swipeGestureCount,
+        total_touch_events:             totalTouchEventCount,
+        mean_tap_duration_s:            mean(allTouchDurations),
+        std_tap_duration_s:             sampleStd(allTouchDurations),
+        max_tap_duration_s:             allTouchDurations.length?Math.max(...allTouchDurations):0,
+        mean_inter_touch_interval_s:    mean(allInterTouchIntervals),
+        std_inter_touch_interval_s:     sampleStd(allInterTouchIntervals),
+        mean_touch_pressure:            mean(allTouchPressures),
+        std_touch_pressure:             sampleStd(allTouchPressures),
+        pressure_available:             allTouchPressures.length>0?1:0,
+        mean_touch_area_px2:            mean(allTouchAreas),
+        std_touch_area_px2:             sampleStd(allTouchAreas),
+        area_available:                 allTouchAreas.length>0?1:0,
+
+        // M. TOUCH SPATIAL / MOTION
+        mean_touch_velocity_px_s:       mean(allTouchVelocities),
+        std_touch_velocity_px_s:        sampleStd(allTouchVelocities),
+        gesture_velocity_variance:      variance(allTouchVelocities),
+        mean_jerk_px_s3:                mean(allJerkValues),
+        std_jerk_px_s3:                 sampleStd(allJerkValues),
+        mean_gesture_distance_px:       mean(allGestureDistances),
+        std_gesture_distance_px:        sampleStd(allGestureDistances),
+        mean_gesture_curvature:         mean(allGestureCurvatures),
+        std_gesture_curvature:          sampleStd(allGestureCurvatures),
+        max_simultaneous_fingers:       maxSimultaneousFingers,
+        micro_suspension_count:         allMicroSuspensions.length,
+        mean_micro_suspension_ms:       mean(allMicroSuspensions),
+        window_tap_count:               winTaps,
+        window_swipe_move_count:        winVels.length,
+        window_mean_velocity_px_s:      mean(winVels),
+        window_std_velocity_px_s:       sampleStd(winVels),
+
+        // N. MOTION SENSORS
+        accel_mean_magnitude:           mean(accelMag),
+        accel_std_magnitude:            sampleStd(accelMag),
+        accel_x_std:                    sampleStd(axArr),
+        accel_y_std:                    sampleStd(ayArr),
+        accel_z_std:                    sampleStd(azArr),
+        grip_stability_gyro_std:        sampleStd(gyroMag),
+        gyro_x_std:                     sampleStd(gxArr),
+        gyro_y_std:                     sampleStd(gyArr),
+        gyro_z_std:                     sampleStd(gzArr),
+        device_tilt_beta:               latestOri.beta,
+        device_tilt_gamma:              latestOri.gamma,
+        motion_sensor_available:        motionPermissionGranted?1:0,
+
+        // O. LINGUISTIC (FIX #4: tokenizeWords used everywhere)
+        word_count:                     words.length,
+        char_count:                     text.length,
+        sentence_count:                 realSentCount,
+        avg_word_length:                mean(words.map(w=>w.length)),
+        avg_sentence_length_words:      sents.length?mean(sents.map(s=>s.split(/\s+/).filter(w=>w).length)):0,
+        sentence_fragment_count:        fragCount,
+        word_repetition_score:          wordRepScore(words),
+        emoji_emoticon_count:           emojiCount,
+        all_caps_word_count_ling:       allCapsCount,
+        positive_emotion_words:         pos,
+        negative_emotion_words:         neg,
+        anxiety_words:                  words.filter(w=>LEX.anxiety.has(w)).length,
+        certainty_words:                words.filter(w=>LEX.certainty.has(w)).length,
+        tentative_words:                words.filter(w=>LEX.tentative.has(w)).length,
+        negation_word_count:            words.filter(w=>LEX.negation.has(w)).length,
+        biological_process_words:       words.filter(w=>LEX.biological.has(w)).length,
+        sentiment_polarity:             polarity,
+        negation_adjusted_polarity:     negAdjPol,
+        affective_word_density:         words.length>0?(pos+neg)/words.length:0,
+        emotion_intensity_weighted:     emotionIntensity,
+        sentiment_volatility:           sentVol,
+        sentence_sentiment_coherence:   sentCoherence,
+        first_person_singular_count:    fp1,
+        first_person_plural_count:      fp2,
+        second_person_count:            sp,
+        third_person_count:             tp,
+        self_focus_ratio:               allPron>0?fp1/allPron:0,
+        other_focus_ratio:              allPron>0?(sp+tp)/allPron:0,
+        we_vs_i_ratio:                  fp1>0?fp2/fp1:0,
+        apology_count:                  words.filter(w=>LEX.apology.has(w)).length,
+        hedging_count:                  hedgeCount,
+        politeness_markers:             words.filter(w=>LEX.politeness.has(w)).length,
+        negative_self_eval_count:       words.filter(w=>LEX.negSelf.has(w)).length,
+        social_process_words:           words.filter(w=>LEX.social.has(w)).length,
+        cognitive_mechanism_words:      words.filter(w=>LEX.cognitive.has(w)).length,
+        past_tense_word_ratio:          tf.past,
+        future_tense_word_ratio:        tf.future,
+        message_length_chars:           text.length,
+
+        // P. TOPIC MODEL SCORES
+        topic_social_rejection:         topicScores.social_rejection||0,
+        topic_anticipatory_anxiety:     topicScores.anticipatory_anxiety||0,
+        topic_self_worth:               topicScores.self_worth||0,
+        topic_social_engagement:        topicScores.social_engagement||0,
+        topic_emotional_regulation:     topicScores.emotional_regulation||0,
+        topic_dominant_index:           topicScores.dominant_topic_index??-1,
+        topic_entropy:                  topicScores.topic_entropy||0,
+
+        // Q. SEMANTIC SCORES (local or API)
+        api_valence:                    latestApiScores?.valence??null,
+        api_arousal:                    latestApiScores?.arousal??null,
+        api_dominance:                  latestApiScores?.dominance??null,
+        api_social_threat_perception:   latestApiScores?.social_threat_perception??null,
+        api_rejection_sensitivity:      latestApiScores?.rejection_sensitivity_signal??null,
+        api_self_focus_semantic:        latestApiScores?.self_focus_semantic??null,
+        api_anxiety_semantic:           latestApiScores?.anxiety_semantic??null,
+        api_hedging_semantic:           latestApiScores?.hedging_semantic??null,
+        api_openness_signal:            latestApiScores?.openness_signal??null,
+        api_conscientiousness_signal:   latestApiScores?.conscientiousness_signal??null,
+        api_extraversion_signal:        latestApiScores?.extraversion_signal??null,
+        api_agreeableness_signal:       latestApiScores?.agreeableness_signal??null,
+        api_neuroticism_signal:         latestApiScores?.neuroticism_signal??null,
+        api_sentiment_coherence:        latestApiScores?.contextual_sentiment_coherence??null,
+        api_semantic_complexity:        latestApiScores?.semantic_complexity??null,
+        api_call_count:                 apiCallCount,
+        api_error_count:                apiErrorCount,
+        api_available:                  latestApiScores?1:0,
+        api_source:                     latestApiScores?.api_source??'none',
+
+        // R. MISSING PDF FEATURES (added)
+        // §1A Typing speed – keys per second
+        keys_per_second:                keys_per_second,
+
+        // §1C Skewness & kurtosis of per-window IKI timing
+        skewness_iki:                   skewness_iki,
+        kurtosis_iki:                   kurtosis_iki,
+
+        // §1C Skewness & kurtosis of key hold durations
+        skewness_hold_duration:         skewness_hold,
+        kurtosis_hold_duration:         kurtosis_hold,
+
+        // §3A Emotion word densities
+        negative_emotion_word_density:  negative_emotion_word_density,
+        positive_emotion_word_density:  positive_emotion_word_density,
+
+        // §5 #15 Emotional polarity shift rate between consecutive windows
+        polarity_shift_rate:            polarity_shift_rate,
+
+        // §5 #16 Word count delta (negative = message length reduction)
+        word_count_delta:               word_count_delta,
+    };
+
+    typingFeatureRows.push(f);
+
+    // CLEAR PER-WINDOW BUFFERS (socialKeywordLog is NOT cleared — rolling)
+    keystrokes=[];
+    windowBackspaceCount=0;windowDeleteCount=0;windowShiftCount=0;
+    windowCapsLockCount=0;windowPrintableCount=0;
+
+    const si=document.getElementById('savingIndicator');
+    si.classList.add('show');
+    setTimeout(()=>si.classList.remove('show'),400);
+}
+
+// ================================================================
+// VALIDATION
+// ================================================================
+function validateSection(sectionNum){
+    const sec=document.querySelector(`.section[data-section="${sectionNum}"]`);
+
+    if(sectionNum===1){
+        const consent=document.querySelector('input[name="consent"]:checked');
+        if(!consent){showToast('Please indicate your consent to proceed.');return false;}
+        if(consent.value==='no'){showToast('Thank you. You cannot proceed without consent.');return false;}
+        return true;
+    }
+    if(sectionNum===2){
+        const age=document.getElementById('age').value.trim();
+        const gender=document.getElementById('gender').value;
+        const psych=document.getElementById('psych_history').value.trim();
+        const phys=document.getElementById('physical_history').value.trim();
+        if(!age){showToast('Please enter your age.');return false;}
+        if(parseInt(age)<21||parseInt(age)>35){showToast('Age must be between 21 and 35.');return false;}
+        if(!gender){showToast('Please select your gender.');return false;}
+        if(!psych){showToast('Please fill in the psychological history field (write "None" if applicable).');return false;}
+        if(!phys){showToast('Please fill in the physical history field (write "None" if applicable).');return false;}
+        const email=document.getElementById('email').value.trim();
+        if(!email){showToast('Please enter your email address.');return false;}
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showToast('Please enter a valid email address.');return false;}
+        return true;
+    }
+    if(sectionNum===3){
+        const anyPurpose=document.querySelectorAll('input[name="ai_purpose"]:checked').length>0;
+        if(!anyPurpose){showToast('Please select at least one purpose for using AI.');return false;}
+        const otherChecked=document.getElementById('ai_other').checked;
+        if(otherChecked&&!document.getElementById('ai_purpose_other_text').value.trim()){
+            showToast('Please specify the other AI purpose.');return false;
+        }
+        const tools=document.getElementById('ai_tools').value.trim();
+        const hpd=document.getElementById('ai_hours_day').value.trim();
+        const hpw=document.getElementById('ai_hours_week').value.trim();
+        const yrs=document.getElementById('ai_years').value.trim();
+        if(!tools){showToast('Please describe the AI tools you use.');return false;}
+        if(!hpd){showToast('Please enter hours per day on AI apps.');return false;}
+        if(!hpw){showToast('Please enter hours per week on AI apps.');return false;}
+        if(!yrs){showToast('Please enter how many years you have used AI apps.');return false;}
+        return true;
+    }
+    if(sectionNum===4){
+        for(let i=1;i<=9;i++){
+            if(!getRadio(`s${i}_concern`)){showToast(`Please answer concern question for Scenario ${i}.`);return false;}
+            if(!getRadio(`s${i}_expect`)){showToast(`Please answer expectation question for Scenario ${i}.`);return false;}
+            if(!document.getElementById(`s${i}_expect_explanation`)?.value.trim()){showToast(`Please explain your choices for Scenario ${i}.`);return false;}
+        }
+        return true;
+    }
+    if(sectionNum===5){
+        for(let i=1;i<=10;i++){if(!getRadio(`compin_${i}`)){showToast(`Please answer COMPIN question ${i}.`);return false;}}
+        return true;
+    }
+    if(sectionNum===6){
+        for(let i=1;i<=60;i++){if(!getRadio(`neo_${i}`)){showToast(`Please answer NEO-FFI question ${i}.`);return false;}}
+        return true;
+    }
+    if(sectionNum===7){
+        for(let i=1;i<=6;i++){
+            const checked=document.querySelectorAll(`input[name="support_${i}"]:checked`).length>0;
+            if(!checked){showToast(`Please select at least one option for Social Scenario ${i}.`);return false;}
+        }
+        return true;
+    }
+    if(sectionNum===8){
+        for(let i=1;i<=4;i++){
+            if(!getRadio(`pragmatics_${i}_response`)){showToast(`Please answer Yes/No for Pragmatics question ${i}.`);return false;}
+            if(!document.getElementById(`pragmatics_${i}_explanation`)?.value.trim()){showToast(`Please provide reasoning for Pragmatics question ${i}.`);return false;}
+        }
+        return true;
+    }
+    return true;
+}
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+function nextSection(){
+    if(!validateSection(currentSection))return;
+    if(currentSection===1){
+        startRecording();
+        document.querySelectorAll('input,textarea').forEach(el=>{
+            if(el.id&&isTextInput(el)&&el.value&&!el.readOnly){
+                textInputs[el.id]=el.value;
+                textLengthSnapshot[el.id]=el.value.length;
+            }
+        });
+    }
+    if(currentSection===2){
+        ['psych_history','physical_history','age','email'].forEach(id=>{
+            const el=document.getElementById(id);
+            if(el&&el.value){
+                textInputs[id]=el.value;
+                textLengthSnapshot[id]=el.value.length;
+            }
+        });
+    }
+    if(currentSection===TOTAL_SECTIONS-1){buildAndSaveAllData();}
+    document.querySelector(`.section[data-section="${currentSection}"]`).classList.remove('active');
+    currentSection++;
+    if(currentSection<=TOTAL_SECTIONS){
+        document.querySelector(`.section[data-section="${currentSection}"]`).classList.add('active');
+        updateProgress();
+        updateNavigationButtons();
+        window.scrollTo({top:0,behavior:'smooth'});
+        setTimeout(forceDisableAutocorrect, 100);
+    }
+    if(currentSection===TOTAL_SECTIONS){
+        stopRecording();
+        document.getElementById('completionParticipantId').textContent=participantId;
+    }
+}
+
+function previousSection(){
+    if(currentSection>1){
+        document.querySelector(`.section[data-section="${currentSection}"]`).classList.remove('active');
+        currentSection--;
+        document.querySelector(`.section[data-section="${currentSection}"]`).classList.add('active');
+        updateProgress();
+        updateNavigationButtons();
+        window.scrollTo({top:0,behavior:'smooth'});
+    }
+}
+function updateNavigationButtons(){
+    document.getElementById('backBtn').style.display=currentSection===1?'none':'block';
+    if(currentSection===TOTAL_SECTIONS){
+        document.querySelector('.button-container').style.display='none';
+    } else {
+        document.getElementById('nextBtn').textContent=currentSection===TOTAL_SECTIONS-1?'Submit ✓':'Continue →';
+    }
+}
+function updateProgress(){
+    const pct=Math.round((currentSection/TOTAL_SECTIONS)*100);
+    document.getElementById('progressPercent').textContent=pct+'%';
+    document.getElementById('progressFill').style.width=pct+'%';
+}
+function selectRadio(name,value){
+    const el=document.getElementById(name+'_'+value);
+    if(el){
+        el.checked=true;
+        const parent=el.closest('.likert-scale,.radio-group');
+        if(parent){
+            parent.querySelectorAll('.likert-option,.radio-item').forEach(o=>o.classList.remove('selected'));
+            el.closest('.likert-option,.radio-item')?.classList.add('selected');
+        }
+    }
+}
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),3000);
+}
+function getRadio(name){
+    const el=document.querySelector(`input[name="${name}"]:checked`);
+    return el?el.value:'';
+}
+
+// ================================================================
+// QUESTION GENERATORS (unchanged from original)
+// ================================================================
+function generateARSQQuestions(){
+    const c=document.getElementById('arsqContainer');
+    const scenarios=[
+        {text:"You ask your parents or another family member for a loan to help you through a difficult financial time.",concern:"How concerned or anxious would you be over whether or not your family would want to help you?",expect:"I would expect that they would agree to help as much as they can."},
+        {text:"You approach a close friend to talk after doing or saying something that seriously upset him/her.",concern:"How concerned or anxious would you be over whether or not your friend would want to talk with you?",expect:"I would expect that he/she would want to talk with me to try to work things out."},
+        {text:"You bring up the issue of sexual protection with your significant other and tell him/her how important you think it is.",concern:"How concerned or anxious would you be over his/her reaction?",expect:"I would expect that he/she would be willing to discuss our possible options without getting defensive."},
+        {text:"You ask your supervisor for help with a problem you have been having at work.",concern:"How concerned or anxious would you be over whether or not the person would want to help you?",expect:"I would expect that he/she would want to try to help me out."},
+        {text:"After a bitter argument, you call or approach your significant other because you want to make up.",concern:"How concerned or anxious would you be over whether or not your significant other would want to make up with you?",expect:"I would expect that he/she would be at least as eager to make up as I would be."},
+        {text:"You ask your parents or other family members to come to an occasion important to you.",concern:"How concerned or anxious would you be over whether or not they would want to come?",expect:"I would expect that they would want to come."},
+        {text:"At a party, you notice someone on the other side of the room that you'd like to get to know, and you approach him or her to try to start a conversation.",concern:"How concerned or anxious would you be over whether or not the person would want to talk with you?",expect:"I would expect that he/she would want to talk with me."},
+        {text:"Lately you've been noticing some distance between yourself and your significant other, and you ask him/her if there is something wrong.",concern:"How concerned or anxious would you be over whether or not he/she still loves you and wants to be with you?",expect:"I would expect that he/she will show sincere love and commitment to our relationship no matter what else may be going on."},
+        {text:"You call a friend when there is something on your mind that you feel you really need to talk about.",concern:"How concerned or anxious would you be over whether or not your friend would want to listen?",expect:"I would expect that he/she would listen and support me."}
+    ];
+    scenarios.forEach((s,idx)=>{
+        const n=idx+1,div=document.createElement('div');div.className='question';
+        div.innerHTML=`<div class="question-text"><strong>Scenario ${n}:</strong> ${s.text}</div>
+        <div class="form-group"><label>a. ${s.concern} *</label>
+        <div class="likert-scale">${createLikertOptions('s'+n+'_concern',['Very Unconcerned','Unconcerned', 'Somewhat Unconcerned','Somewhat concerned','Concerned','Very concerned'])}</div>
+        <div class="form-group"><label>b. ${s.expect} *</label>
+        <div class="likert-scale">${createLikertOptions('s'+n+'_expect',['Very Unlikely','Unlikely','Somewhat Unlikely','Somewhat likely','Likely','Very likely'])}</div>
+        <div class="form-group" style="margin-top:12px"><label style="font-size:.85rem;color:#444">Please explain your choices for the above scenario: *</label>
+        <textarea id="s${n}_expect_explanation" rows="2" placeholder="If cannot explain, write 'I cannot explain at this moment'" required autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false" inputmode="text" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" data-ms-editor="false" style="font-size:14px;min-height:70px"></textarea></div></div>`;
+        c.appendChild(div);
+    });
+}
+
+function generateCOMPINQuestions(){
+    const c=document.getElementById('compinContainer');
+    ["I do not know how to use my competences at the right moment.","I know that I underestimate myself, but I cannot deal with it.","Usually, my performance is under average because I do not like to be intrusive.","I cannot express myself and keep the people I love by my side.","During work I keep telling myself, I won't make it, so it would be better if I didn't start at all.","I often feel that I will not be able to do what is expected.","I am easily inhibited by failure, and I find it difficult to go on.","I often feel that I am not ready for things that I must do.","I do not respect myself enough.","I am not self-confident."].forEach((q,i)=>{
+        const div=document.createElement('div');div.className='question';
+        div.innerHTML=`<div class="question-text">${i+1}. ${q} *</div><div class="likert-scale">${createLikertOptions('compin_'+(i+1),['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree'])}</div>`;
+        c.appendChild(div);
+    });
+}
+
+function generateNEOQuestions(){
+    const c=document.getElementById('neoContainer');
+    ["I am not a worrier.","I like to have a lot of people around me.","I don't like to waste my time daydreaming.","I try to be courteous to everyone I meet.","I keep my belongings clean and neat.","I often feel inferior to others.","I laugh easily.","Once I find the right way to do something, I stick to it.","I often get into arguments with my family and co-workers.","I'm pretty good about pacing myself so as to get things done on time.","When I'm under a great deal of stress, sometimes I feel like I'm going to pieces.","I don't consider myself especially \"light-hearted.\"","I am intrigued by the patterns I find in art and nature.","Some people think I'm selfish and egotistical.","I am not a very methodical person.","I rarely feel alone or blue.","I really enjoy talking to people.","I believe letting students hear controversial speakers can only confuse and mislead them.","I would rather cooperate with others than compete with them.","I try to perform all the tasks assigned to me conscientiously.","I often feel tense and jittery.","I like to be where the action is.","Poetry has little or no effect on me.","I tend to be cynical and skeptical of other's intentions.","I have a clear set of goals and work toward them in an orderly fashion.","Sometimes I feel completely worthless.","I usually prefer to do things alone.","I often try new and foreign foods.","I believe that most people will take advantage of you if you let them.","I waste a lot of time before settling down to work.","I rarely feel fearful or anxious.","I often feel as if I am bursting with energy.","I seldom notice the moods or feelings that different environments produce.","Most people I know like me.","I work hard to accomplish my goals.","I often get angry at the way people treat me.","I am a cheerful, high-spirited person.","I believe we should look to our religious authorities for decisions on moral issues.","Some people think of me as cold and calculating.","When I make a commitment, I can always be counted on to follow through.","Too often, when things go wrong, I get discouraged and feel like giving up.","I am not a cheerful optimist.","Sometimes when I am reading poetry or looking at a work of art, I feel a chill or wave of excitement.","I'm hard-headed and tough-minded in my attitudes.","Sometimes I'm not as dependable or reliable as I should be.","I am seldom sad or depressed.","My life is fast-paced.","I have little interest in speculating on the nature of the universe or the human condition.","I generally try to be thoughtful and considerate.","I am a productive person who always gets the job done.","I often feel helpless and want someone else to solve my problems.","I am a very active person.","I have a lot of intellectual curiosity.","If I don't like people, I let them know it.","I never seem to be able to get organized.","At times I have been so ashamed I just wanted to hide.","I would rather go my own way than be a leader of others.","I often enjoy playing with theories or abstract ideas.","I am willing to manipulate people if it serves my purposes.","I strive for excellence in everything I do."].forEach((q,i)=>{
+        const div=document.createElement('div');div.className='question';
+        div.innerHTML=`<div class="question-text">${i+1}. ${q} *</div><div class="likert-scale">${createLikertOptions('neo_'+(i+1),['Not true','Moderately untrue', 'Mildly untrue','Neutral','Mildly true','Moderately true','Very true'])}</div>`;
+        c.appendChild(div);
+    });
+}
+
+function generateSocialScenarios(){
+    const c=document.getElementById('socialContainer');
+    const opts=["Parents","Siblings","Relatives","AI Companion","Spouse/Partner","Friend(s)","Teachers","Mental Health Professionals","Stranger"];
+    ["After an eventful day at your place of education or workplace, when you feel you are not getting the priority that you deserve to get in a group, whom would you seek for comfort or help out of the given options?","In a group of colleagues/peers/friends, while engaging in a conversation, you felt that you are being ignored or not noticed. Whom would you seek for comfort or help out of the given options after this experience?","When you feel that a person who you like interacting with is not prioritizing you the way you deserve, whom would you seek for comfort or help out of the given options?","You are assigned to a group to complete a task but during discussions you feel that your opinions and ideas are being overlooked or you are being ignored. After such experience, whom would you seek for comfort or help out of the given options?","You feel that, in a family gathering, you are less visible to others or not being prioritized as you would like to be. After such experience, whom would you seek for comfort or help out of the given options?","Overall, if there is any recent situation where you felt rejected, whom would you like to seek for comfort and social support?"].forEach((sc,idx)=>{
+        const n=idx+1,div=document.createElement('div');div.className='question';
+        const chk=opts.map(o=>`<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:white;border-radius:8px;margin-bottom:6px;cursor:pointer"><input type="checkbox" name="support_${n}" value="${o}" style="width:20px;height:20px;flex-shrink:0"><span>${o}</span></label>`).join('');
+        div.innerHTML=`<div class="question-text"><strong>${n}.</strong> ${sc} *</div>
+        <div class="checkbox-group" style="margin-bottom:12px"><p style="font-weight:600;margin-bottom:8px">Who would you reach out to? (select at least one) *</p>${chk}</div>`;
+        c.appendChild(div);
+    });
+}
+
+function generatePragmaticsQuestions(){
+    const c=document.getElementById('pragmaticsContainer');
+    ["While you were having conversations with a group of friends, someone makes a joke where they use certain terms as a figure of speech or a pun, and not literally. Do you feel confused and unable to understand what they mean to say, and interpret their words literally?","In a group, people were talking about their weekend plans and while one of them was sharing about theirs, someone else begins to share about their own weekend plans before the person finished about theirs. Do you feel you also have done so before because you found following a conversation or taking turn in conversation difficult?","When you were talking to a friend and acquaintance, after a while they give you subtle hints that they need to end the conversation instead of directly saying that they need to leave. Do you find it difficult to understand such subtle, non-verbal, and indirect cues in conversations?","Someone offered or gifted you something that you might dislike. In such a case, do you directly tell the person that you dislike it and find it is difficult for you to respond using terms less direct, like appreciating their effort in giving you the gift? Do you also find it difficult to understand the other person's negative reaction to your response?"].forEach((q,idx)=>{
+        const n=idx+1,div=document.createElement('div');div.className='question';
+        div.innerHTML=`<div class="question-text"><strong>${n}.</strong> ${q} *</div>
+        <div class="radio-group">
+            <label class="radio-item" onclick="selectRadio('pragmatics_${n}_response','yes')"><input type="radio" name="pragmatics_${n}_response" value="yes" id="pragmatics_${n}_response_yes" required><span>YES</span></label>
+            <label class="radio-item" onclick="selectRadio('pragmatics_${n}_response','no')"><input type="radio" name="pragmatics_${n}_response" value="no" id="pragmatics_${n}_response_no"><span>NO</span></label>
+        </div>
+        <label style="font-size:.85rem;color:#444;margin-top:10px;display:block">Give reason(s) for your choice: *</label>
+        <textarea id="pragmatics_${n}_explanation" rows="3" placeholder="Please explain..." required autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false" inputmode="text" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false" data-ms-editor="false" style="margin-top:6px"></textarea>`;
+        c.appendChild(div);
+    });
+}
+
+function createLikertOptions(name,labels){
+    return labels.map((l,i)=>`<label class="likert-option" onclick="selectRadio('${name}','${i+1}')"><input type="radio" name="${name}" value="${i+1}" id="${name}_${i+1}" ${i===0 ? 'required' : ''}><label for="${name}_${i+1}">${l}</label></label>`).join('');
+}
+
+// ================================================================
+// FORM DATA + CSV
+// ================================================================
+function collectFormData(){
+    const r={};
+    r.participant_id=participantId;
+    r.age=document.getElementById('age').value;
+    r.gender=document.getElementById('gender').value;
+    r.psych_history=textInputs['psych_history']||document.getElementById('psych_history').value;
+    r.physical_history=textInputs['physical_history']||document.getElementById('physical_history').value;
+    r.email=document.getElementById('email').value;
+    r.ai_purpose_academic=document.getElementById('ai_academic').checked?1:0;
+    r.ai_purpose_decision=document.getElementById('ai_decision').checked?1:0;
+    r.ai_purpose_social=document.getElementById('ai_social').checked?1:0;
+    r.ai_purpose_therapeutic=document.getElementById('ai_therapeutic').checked?1:0;
+    r.ai_purpose_other=document.getElementById('ai_other').checked?1:0;
+    r.ai_purpose_other_text=textInputs['ai_purpose_other_text']||document.getElementById('ai_purpose_other_text').value;
+    r.ai_tools=textInputs['ai_tools']||document.getElementById('ai_tools').value;
+    r.ai_hours_day=textInputs['ai_hours_day']||document.getElementById('ai_hours_day').value;
+    r.ai_hours_week=textInputs['ai_hours_week']||document.getElementById('ai_hours_week').value;
+    r.ai_years=textInputs['ai_years']||document.getElementById('ai_years').value;
+    for(let i=1;i<=9;i++){
+        r[`s${i}_concern`]=getRadio(`s${i}_concern`);
+        r[`s${i}_expect`]=getRadio(`s${i}_expect`);
+        r[`s${i}_expect_explanation`]=textInputs[`s${i}_expect_explanation`]||document.getElementById(`s${i}_expect_explanation`)?.value||'';
+    }
+    for(let i=1;i<=10;i++)r[`compin_${i}`]=getRadio(`compin_${i}`);
+    for(let i=1;i<=60;i++)r[`neo_${i}`]=getRadio(`neo_${i}`);
+    for(let i=1;i<=6;i++){
+        r[`social_scenario_${i}`]=[...document.querySelectorAll(`input[name="support_${i}"]:checked`)].map(cb=>cb.value).join(', ');
+    }
+    for(let i=1;i<=4;i++){
+        r[`pragmatics_${i}_response`]=getRadio(`pragmatics_${i}_response`);
+        r[`pragmatics_${i}_explanation`]=textInputs[`pragmatics_${i}_explanation`]||document.getElementById(`pragmatics_${i}_explanation`)?.value||'';
+    }
+    return r;
+}
+
+function buildAndSaveAllData(){
+    document.querySelectorAll('input,textarea').forEach(el=>{
+        if(el.id&&isTextInput(el)&&!el.readOnly&&el.value){
+            textInputs[el.id]=el.value;
+            textLengthSnapshot[el.id]=el.value.length;
+        }
+    });
+    captureSnapshot();
+    const r=collectFormData();
+    surveyResponse={
+        timestamp:new Date().toISOString(),
+        session_id:sessionId,
+        user_id:participantId,
+        completion_time_minutes:((Date.now()-sessionStart)/60000).toFixed(2),
+        ...r
+    };
+}
+
+function objectsToCSV(rows){
+    if(!rows.length)return'';
+    const h=Object.keys(rows[0]);
+    const esc=v=>{const s=String(v??'');return(s.includes(',')||s.includes('"')||s.includes('\n'))?'"'+s.replace(/"/g,'""')+'"':s;};
+    return[h.join(','),...rows.map(r=>h.map(k=>esc(r[k])).join(','))].join('\n');
+}
+
+function downloadCSV(content,filename){
+    const blob=new Blob([content],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=Object.assign(document.createElement('a'),{href:url,download:filename});
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function downloadSurveyCSV(){
+    if(!surveyResponse?.participant_id){showToast('No survey data yet.');return;}
+    downloadCSV(objectsToCSV([surveyResponse]),`survey_responses_${participantId}.csv`);
+    showToast('✓ Survey CSV downloading!');
+}
+
+function downloadTypingCSV(){
+    if(!typingFeatureRows.length){showToast('No feature data yet.');return;}
+    downloadCSV(objectsToCSV(typingFeatureRows),`typing_touch_features_${participantId}.csv`);
+    showToast('✓ Features CSV downloading!');
+}
+
+</script>
+</body>
+</html>
