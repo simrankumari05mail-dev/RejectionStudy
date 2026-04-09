@@ -108,7 +108,7 @@
             <div class="form-group"><label>Participant ID (auto-generated):</label><input type="text" id="participant_id" readonly></div>
             <div class="form-group">
                 <label>Age (in years) *</label>
-                <input type="number" id="age" min="21" max="35" placeholder="21-35 years" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="numeric">
+                <input type="number" id="age" min="18" max="30" placeholder="18-30 years" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="numeric">
             </div>
             <div class="form-group">
                 <label>Gender *</label>
@@ -117,9 +117,13 @@
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="non-binary">Non-binary</option>
-                    <option value="other">Other</option>
+                    <option value="transgender/intersex">Transgender/Intersex</option>
                     <option value="prefer-not-to-say">Prefer not to say</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Education Qualifications *</label>
+                <textarea type="text" id="education_qualification" placeholder="e.g., Bachelor's in Psychology, M.A. in Counseling" required autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" inputmode="text"></textarea>
             </div>
             <div class="form-group">
                 <label>History of any diagnosed psychological or neurological ailments? *</label>
@@ -804,7 +808,7 @@ async function runSemanticAnalysis(text){
     lastApiCallTime=nowSec;
     const localScores=computeLocalSemanticScores(text);
     const keySet=typeof RESEARCH_API_KEY!=='undefined'&&RESEARCH_API_KEY&&
-                 !RESEARCH_API_KEY.startsWith('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');
+                !RESEARCH_API_KEY.startsWith('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');
     if(!keySet){
         apiCallCount++;
         latestApiScores={...localScores,api_call_number:apiCallCount,api_text_length:text.length,api_source:'local'};
@@ -1604,11 +1608,13 @@ function validateSection(sectionNum){
     if(sectionNum===2){
         const age=document.getElementById('age').value.trim();
         const gender=document.getElementById('gender').value;
+        const education_qualification=document.getElementById('education_qualification').value.trim();
         const psych=document.getElementById('psych_history').value.trim();
         const phys=document.getElementById('physical_history').value.trim();
         if(!age){showToast('Please enter your age.');return false;}
-        if(parseInt(age)<21||parseInt(age)>35){showToast('Age must be between 21 and 35.');return false;}
+        if(parseInt(age)<18||parseInt(age)>30){showToast('Age must be between 18 and 30.');return false;}
         if(!gender){showToast('Please select your gender.');return false;}
+        if (!education_qualification) {showToast('Please enter your education qualifications.');return false;}
         if(!psych){showToast('Please fill in the psychological history field (write "None" if applicable).');return false;}
         if(!phys){showToast('Please fill in the physical history field (write "None" if applicable).');return false;}
         const email=document.getElementById('email').value.trim();
@@ -1835,6 +1841,7 @@ function collectFormData(){
     r.participant_id=participantId;
     r.age=document.getElementById('age').value;
     r.gender=document.getElementById('gender').value;
+    r.education_qualification =textInputs['education_qualification']||document.getElementById('education_qualification').value;
     r.psych_history=textInputs['psych_history']||document.getElementById('psych_history').value;
     r.physical_history=textInputs['physical_history']||document.getElementById('physical_history').value;
     r.email=document.getElementById('email').value;
